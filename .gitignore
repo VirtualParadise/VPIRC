@@ -2,3 +2,9 @@ Build/*.exe*
 packages/
 */obj/*
 *.suo
+Build/*.xml
+Build/*.exe
+Build/*.pdb
+Build/*.dll
+Build/Settings - Test.ini
+VPIRC/VPIRC.csproj.user
