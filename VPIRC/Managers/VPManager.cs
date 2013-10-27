@@ -5,12 +5,15 @@ using VP;
 
 namespace VPIRC
 {
+    public delegate void MessageArgs(User source, string message);
+
     class VPManager
     {
         const string tag = "Virtual Paradise";
 
-        public event UserArgs Enter;
-        public event UserArgs Leave;
+        public event UserArgs    Enter;
+        public event UserArgs    Leave;
+        public event MessageArgs Message;
 
         public string Prefix;
         public string World;
@@ -27,6 +30,8 @@ namespace VPIRC
             root = new VPBotRoot();
             root.Bot.Avatars.Enter      += onAvatarEnter;
             root.Bot.Avatars.Leave      += onAvatarLeave;
+            root.Bot.Chat               += onChat;
+            root.Bot.Console            += onConsole;
             root.Bot.UniverseDisconnect += onDisconnect;
             root.Bot.WorldDisconnect    += onDisconnect;
 
@@ -40,8 +45,9 @@ namespace VPIRC
 
             bots.Clear();
             root.Dispose();
-            Enter = null;
-            Leave = null;
+            Enter   = null;
+            Leave   = null;
+            Message = null;
             Log.Info(tag, "All bots cleared");
         }
 
@@ -167,6 +173,27 @@ namespace VPIRC
                 Leave(user);
 
             users.Remove(user);
+        }
+
+        void onChat(Instance sender, ChatMessage chat)
+        {
+            message(chat.Name, chat.Message);
+        }
+
+        void onConsole(Instance sender, ConsoleMessage console)
+        {
+            message(console.Name, console.Message);
+        }
+
+        void message(string name, string message)
+        {
+            var user = GetUser(name);
+
+            if (user == null)
+                return;
+
+            if (Message != null)
+                Message(user, message);
         }
     }
 }

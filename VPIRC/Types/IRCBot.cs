@@ -59,7 +59,8 @@ namespace VPIRC
                 throw new InvalidOperationException("Tried to create IRC bot for an IRC user (wrong side)");
 
             this.User = user;
-            this.name = VPIRC.IRC.Prefix + user.Name;
+            this.name = VPIRC.IRC.Prefix + user.Name.Replace(" ","");
+            Client.ActiveChannelSyncing = true;
 
             registerEvents();
             Log.Fine(tag, "Created IRC client for VP user '{0}'", user);
@@ -67,6 +68,7 @@ namespace VPIRC
 
         protected void registerEvents()
         {
+            Client.OnKick         += onKick;
             Client.OnError        += onError;
             Client.OnDisconnected += onDisconnect;
         }
@@ -133,6 +135,15 @@ namespace VPIRC
             lastError = e.ErrorMessage;
             Log.Warn(tag, "IRC error: {0}", e.ErrorMessage);
         }
+        
+        void onKick(object sender, KickEventArgs e)
+        {
+            if ( !e.Whom.IEquals(name) )
+                return;
+
+            Log.Warn(tag, "{0} got kicked; disconnecting", Name);
+            Client.Disconnect();
+        }
 
         public void Dispose()
         {
@@ -141,6 +152,7 @@ namespace VPIRC
 
             Client.OnDisconnected -= onDisconnect;
             Client.OnError        -= onError;
+            Client.OnKick         -= onKick;
             Client.RfcQuit();
             Client.Disconnect();
 

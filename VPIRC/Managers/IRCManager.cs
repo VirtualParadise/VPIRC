@@ -5,12 +5,15 @@ using System.Linq;
 
 namespace VPIRC
 {
+    public delegate void IrcMessageArgs(User source, string message, bool action);
+
     class IRCManager
     {
         const string tag = "IRC";
 
-        public event UserArgs Enter;
-        public event UserArgs Leave;
+        public event UserArgs       Enter;
+        public event UserArgs       Leave;
+        public event IrcMessageArgs Message;
 
         public string Prefix;
         public string Channel;
@@ -28,24 +31,28 @@ namespace VPIRC
             PerConnectThrottle = int.Parse( VPIRC.Settings.IRC["PerConnectThrottle"] ?? "1" );
 
             root = new IRCBotRoot();
-            root.Client.OnNames         += onNames;
-            root.Client.OnJoin          += onEnter;
-            root.Client.OnPart          += onLeave;
-            root.Client.OnQuit          += onQuit;
-            root.Client.OnDisconnected  += onDisconnect;
-            root.Disposing              += onDisposing;
+            root.Client.OnNames          += onNames;
+            root.Client.OnJoin           += onEnter;
+            root.Client.OnPart           += onLeave;
+            root.Client.OnQuit           += onQuit;
+            root.Client.OnDisconnected   += onDisconnect;
+            root.Client.OnChannelMessage += onMessage;
+            root.Client.OnChannelAction  += onAction;
+            root.Disposing               += onDisposing;
 
             root.Connect();
         }
 
         void onDisposing()
         {
-            root.Client.OnNames         -= onNames;
-            root.Client.OnJoin          -= onEnter;
-            root.Client.OnPart          -= onLeave;
-            root.Client.OnQuit          -= onQuit;
-            root.Client.OnDisconnected  -= onDisconnect;
-            root.Disposing              -= onDisposing;
+            root.Client.OnNames          -= onNames;
+            root.Client.OnJoin           -= onEnter;
+            root.Client.OnPart           -= onLeave;
+            root.Client.OnQuit           -= onQuit;
+            root.Client.OnDisconnected   -= onDisconnect;
+            root.Client.OnChannelMessage -= onMessage;
+            root.Client.OnChannelAction  -= onAction;
+            root.Disposing               -= onDisposing;
         }
 
         public void Takedown()
@@ -55,8 +62,9 @@ namespace VPIRC
 
             bots.Clear();
             root.Dispose();
-            Enter = null;
-            Leave = null;
+            Enter   = null;
+            Leave   = null;
+            Message = null;
             Log.Info(tag, "All bots cleared");
         }
 
@@ -152,13 +160,13 @@ namespace VPIRC
 
         void onEnter(object sender, JoinEventArgs e)
         {
-            enter(e.Who);
+            enter(e.Data.Nick);
         }
 
         void onNames(object sender, NamesEventArgs e)
         {
             foreach (var name in e.UserList)
-                enter(name);
+               enter( name.TrimStart('~', '+', '@', '&', '%') );
         }
 
         void enter(string nick)
@@ -200,6 +208,27 @@ namespace VPIRC
                 Leave(user);
 
             users.Remove(user);
+        }
+
+        void onMessage(object sender, IrcEventArgs e)
+        {
+            message(e.Data.Nick, e.Data.Message, false);
+        }
+
+        void onAction(object sender, ActionEventArgs e)
+        {
+            message(e.Data.Nick, e.ActionMessage, true);
+        }
+
+        void message(string name, string message, bool action)
+        {
+            var user = GetUser(name);
+
+            if (user == null)
+                return;
+
+            if (Message != null)
+                Message(user, message, action);
         }
     }
 }
