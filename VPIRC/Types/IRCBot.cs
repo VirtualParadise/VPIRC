@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NetIrc2;
-using NetIrc2.Events;
+using Meebey.SmartIrc4net;
 
 namespace VPIRC
 {
     class IRCBot : IDisposable
     {
         const string tag = "IRCBot";
+        public static DateTime LastAttemptThrottle = TDateTime.UnixEpoch;
+
+        public event Action<IRCBot> Disposing;
 
         public readonly IrcClient Client = new IrcClient();
+
+        string lastError;
 
         protected string name;
         /// <summary>
@@ -54,9 +58,14 @@ namespace VPIRC
         {
             this.name = VPIRC.IRC.Prefix + name;
 
-            Client.GotIrcError += onError;
-
+            registerEvents();
             Log.Fine(tag, "Created IRC client for user '{0}'", Name);
+        }
+
+        protected void registerEvents()
+        {
+            Client.OnError        += onError;
+            Client.OnDisconnected += onDisconnect;
         }
 
         protected IRCBot() { }
@@ -73,17 +82,26 @@ namespace VPIRC
                 var realname = VPIRC.Settings.IRC["Realname"];
                 var password = VPIRC.Settings.IRC["Password"];
                 var nickname = Name;
-                lastAttempt  = DateTime.Now;
+
+                LastAttemptThrottle = DateTime.Now;
+                lastAttempt         = DateTime.Now;
 
                 try
                 {
                     Client.Connect(hostname, port);
-                    Client.LogIn(username, realname, nickname, null, null, password);
-                    Client.Join(VPIRC.IRC.Channel);
+                    Client.Login(Name, realname, 0, username, password);
+                    Client.RfcJoin(VPIRC.IRC.Channel);
+                    Client.ListenOnce(true);
+
+                    if (!Client.IsConnected)
+                        throw new Exception("IRC did not connect");
                 }
                 catch (Exception e)
                 {
                     Log.Warn(tag, "Client '{0}' cannot connect: {1}", Name, e.Message);
+
+                    if (Client.IsConnected)
+                        Client.Disconnect();
 
                     state = ConnState.Disconnected;
                     return;
@@ -95,15 +113,32 @@ namespace VPIRC
             });
         }
 
-        void onError(object s, IrcErrorEventArgs e)
+        void onDisconnect(object sender, EventArgs e)
         {
-            Log.Warn(tag, "Error: {0}", e.Error);
+            if (state == ConnState.Connecting)
+                return;
+
+            Log.Warn(tag, "{0} lost connection", Name);
+            state = ConnState.Disconnected;
+        }
+
+        void onError(object sender, ErrorEventArgs e)
+        {
+            lastError = e.ErrorMessage;
+            Log.Warn(tag, "IRC error: {0}", e.ErrorMessage);
         }
 
         public void Dispose()
         {
-            Client.GotIrcError -= onError;
-            Client.Close();
+            if (Disposing != null)
+                Disposing(this);
+
+            Client.OnDisconnected -= onDisconnect;
+            Client.OnError        -= onError;
+            Client.RfcQuit();
+            Client.Disconnect();
+
+            Disposing = null;
         }
     }
 }

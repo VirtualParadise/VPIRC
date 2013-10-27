@@ -72,7 +72,7 @@ namespace VPIRC
                     return;
 
                 case ConnState.Disconnected:
-                    if (root.LastAttempt.SecondsToNow() < 20)
+                    if (root.LastAttempt.SecondsToNow() < 5)
                         return;
 
                     Log.Debug(tag, "Root bridge bot is not connected; connecting...");
@@ -92,7 +92,7 @@ namespace VPIRC
                         return;
 
                     case ConnState.Disconnected:
-                        if (bot.LastAttempt.SecondsToNow() < 20)
+                        if (bot.LastAttempt.SecondsToNow() < 5)
                             return;
 
                         Log.Debug(tag, "User bot '{0}' is not connected; connecting...", bot);

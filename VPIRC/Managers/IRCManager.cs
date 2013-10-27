@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NetIrc2;
+using Meebey.SmartIrc4net;
 
 namespace VPIRC
 {
@@ -16,23 +16,36 @@ namespace VPIRC
 
         public string Prefix;
         public string Channel;
+        public int    PerConnectThrottle;
 
-        IrcClient   root;
-        List<VPBot> bots  = new List<VPBot>();
-        List<User>  users = new List<User>();
+        IRCBotRoot   root;
+        List<IRCBot> bots  = new List<IRCBot>();
+        List<User>   users = new List<User>();
 
         public void Setup()
         {
             Prefix  = VPIRC.Settings.IRC["Prefix"] ?? "vp-";
             Channel = VPIRC.Settings.IRC["Channel"] ?? "#vp";
 
-            root = new VPBotRoot();
-            root.Bot.Avatars.Enter      += onAvatarEnter;
-            root.Bot.Avatars.Leave      += onAvatarLeave;
-            root.Bot.UniverseDisconnect += onDisconnect;
-            root.Bot.WorldDisconnect    += onDisconnect;
+            PerConnectThrottle = int.Parse( VPIRC.Settings.IRC["PerConnectThrottle"] ?? "1" );
+
+            root = new IRCBotRoot();
+            root.Client.OnJoin          += onEnter;
+            root.Client.OnPart          += onLeave;
+            root.Client.OnQuit          += onQuit;
+            root.Client.OnDisconnected  += onDisconnect;
+            root.Disposing              += onDisposing;
 
             root.Connect();
+        }
+
+        void onDisposing(IRCBot obj)
+        {
+            root.Client.OnJoin          -= onEnter;
+            root.Client.OnPart          -= onLeave;
+            root.Client.OnQuit          -= onQuit;
+            root.Client.OnDisconnected  -= onDisconnect;
+            root.Disposing              -= onDisposing;
         }
 
         public void Takedown()
@@ -45,9 +58,9 @@ namespace VPIRC
             Log.Info(tag, "All bots cleared");
         }
 
-        public VPBot Add(string name)
+        public IRCBot Add(string name)
         {
-            var bot = new VPBot(name);
+            var bot = new IRCBot(name);
 
             Log.Info(tag, "Bridging user '{0}'", name);
             bots.Add(bot);
@@ -74,7 +87,10 @@ namespace VPIRC
                     return;
 
                 case ConnState.Disconnected:
-                    if (root.LastAttempt.SecondsToNow() < 20)
+                    if (IRCBot.LastAttemptThrottle.SecondsToNow() < PerConnectThrottle)
+                        return;
+
+                    if (root.LastAttempt.SecondsToNow() < 5)
                         return;
 
                     Log.Debug(tag, "Root bridge bot is not connected; connecting...");
@@ -82,7 +98,7 @@ namespace VPIRC
                     return;
 
                 case ConnState.Connected:
-                    root.Bot.Pump();
+                    root.Client.ListenOnce(false);
                     break;
             }
 
@@ -94,7 +110,10 @@ namespace VPIRC
                         return;
 
                     case ConnState.Disconnected:
-                        if (bot.LastAttempt.SecondsToNow() < 20)
+                        if (IRCBot.LastAttemptThrottle.SecondsToNow() < PerConnectThrottle)
+                            return;
+
+                        if (bot.LastAttempt.SecondsToNow() < 5)
                             return;
 
                         Log.Debug(tag, "User bot '{0}' is not connected; connecting...", bot);
@@ -102,7 +121,7 @@ namespace VPIRC
                         return;
 
                     case ConnState.Connected:
-                        bot.Bot.Pump();
+                        bot.Client.ListenOnce(false);
                         break;
                 }
             }
@@ -113,9 +132,9 @@ namespace VPIRC
             return users.Where( u => u.Name.IEquals(name) ).FirstOrDefault();
         }
 
-        void onDisconnect(Instance sender, int error)
+        void onDisconnect(object sender, EventArgs e)
         {
-            Log.Warn(tag, "Bridge bot disconnected; clearing all users");
+            Log.Warn(tag, "Bridge client disconnected; clearing all users");
 
             if (Leave != null)
                 foreach (var user in users)
@@ -124,38 +143,37 @@ namespace VPIRC
             users.Clear();
         }
 
-        void onAvatarEnter(Instance sender, Avatar avatar)
+        void onEnter(object sender, JoinEventArgs e)
         {
-            if ( avatar.Name.StartsWith("[" + Prefix) )
+            var nick = e.Who;
+            if ( nick.StartsWith(Prefix) )
                 return;
 
-            var user = GetUser(avatar.Name);
-
-            if (user != null)
-            {
-                user.Instances++;
-                return;
-            }
-
-            user = new User(avatar.Name, Side.VirtualParadise);
+            var user = new User(nick, Side.IRC);
             users.Add(user);
 
             if (Enter != null)
                 Enter(user);
         }
 
-        void onAvatarLeave(Instance sender, string name, int session)
+        void onLeave(object sender, PartEventArgs e)
         {
-            if ( name.StartsWith("[" + Prefix) )
+            leave(e.Who);
+        }
+
+        void onQuit(object sender, QuitEventArgs e)
+        {
+            leave(e.Who);
+        }
+
+        void leave(string nick)
+        {
+            if ( nick.StartsWith(Prefix) )
                 return;
 
-            var user = GetUser(name);
+            var user = GetUser(nick);
 
             if (user == null)
-                return;
-            
-            user.Instances--;
-            if (user.Instances > 0)
                 return;
 
             if (Leave != null)

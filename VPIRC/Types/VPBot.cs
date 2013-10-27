@@ -113,7 +113,7 @@ namespace VPIRC
 
         void onDisconnect(Instance sender, int error)
         {
-            Log.Warn(tag, "Lost connection, winsock error {1}", Name, error);
+            Log.Warn(tag, "{0} lost connection, winsock error {1}", Name, error);
             state = ConnState.Disconnected;
         }
 

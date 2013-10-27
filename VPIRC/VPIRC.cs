@@ -36,12 +36,19 @@ namespace VPIRC
             Settings.Setup(args);
             VP.Setup();
             IRC.Setup();
+
+            IRC.Add("TestUserA");
+            IRC.Add("TestUserB");
+            IRC.Add("TestUserC");
         }
 
         static void loop()
         {
             while (!exiting)
+            {
                 VP.Update();
+                IRC.Update();
+            }
         }
 
         static void takedown()
