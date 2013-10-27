@@ -1,4 +1,5 @@
 ﻿using System;
+using VP;
 using Meebey.SmartIrc4net;
 
 namespace VPIRC
@@ -17,6 +18,8 @@ namespace VPIRC
             VPIRC.IRC.Leave   += u => { onEnterLeave(u, Direction.Leaving); };
             VPIRC.IRC.Message += onIRCMessage;
         }
+
+        public void Takedown() { }
 
         void onVPMessage(User source, string message)
         {
@@ -73,11 +76,6 @@ namespace VPIRC
                 else
                     VPIRC.IRC.Remove(user);
             }
-        }
-
-        public void Takedown()
-        {
-
         }
     }
 }

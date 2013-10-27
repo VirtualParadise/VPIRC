@@ -18,7 +18,12 @@ namespace VPIRC
         public string Prefix;
         public string World;
 
-        VPBotRoot   root;
+        VPBotRoot root;
+        public VPBotRoot Root
+        {
+            get { return root; }
+        }
+
         List<VPBot> bots  = new List<VPBot>();
         List<User>  users = new List<User>();
 

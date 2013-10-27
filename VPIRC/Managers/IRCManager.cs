@@ -19,7 +19,12 @@ namespace VPIRC
         public string Channel;
         public int    PerConnectThrottle;
 
-        IRCBotRoot   root;
+        IRCBotRoot root;
+        public IRCBotRoot Root
+        {
+            get { return root; }
+        }
+
         List<IRCBot> bots  = new List<IRCBot>();
         List<User>   users = new List<User>();
 
@@ -38,6 +43,7 @@ namespace VPIRC
             root.Client.OnDisconnected   += onDisconnect;
             root.Client.OnChannelMessage += onMessage;
             root.Client.OnChannelAction  += onAction;
+            root.Client.OnNickChange     += onNickChange;
             root.Disposing               += onDisposing;
 
             root.Connect();
@@ -52,6 +58,7 @@ namespace VPIRC
             root.Client.OnDisconnected   -= onDisconnect;
             root.Client.OnChannelMessage -= onMessage;
             root.Client.OnChannelAction  -= onAction;
+            root.Client.OnNickChange     -= onNickChange;
             root.Disposing               -= onDisposing;
         }
 
@@ -229,6 +236,12 @@ namespace VPIRC
 
             if (Message != null)
                 Message(user, message, action);
+        }
+        
+        void onNickChange(object sender, NickChangeEventArgs e)
+        {
+            leave(e.OldNickname);
+            enter(e.NewNickname);
         }
     }
 }

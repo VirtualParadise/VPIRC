@@ -1,4 +1,6 @@
 ﻿using System;
+using Nexus.Graphics.Colors;
+using VP;
 
 namespace VPIRC
 {
@@ -23,7 +25,7 @@ namespace VPIRC
 
         void onConnected()
         {
-            Bot.ConsoleBroadcast("", "*** {0} is bridging this world with channel {1}@{2}...", name, VPIRC.IRC.Channel, VPIRC.Settings.IRC["Hostname"]);
+            Bot.ConsoleBroadcast(ChatEffect.None, Colors.Info, "", "*** {0} is bridging this world with channel {1}@{2}...", name, VPIRC.IRC.Channel, VPIRC.Settings.IRC["Hostname"]);
         }
 
     }
