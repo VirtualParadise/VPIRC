@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Meebey.SmartIrc4net;
+using System;
 using System.Threading.Tasks;
-using Meebey.SmartIrc4net;
 
 namespace VPIRC
 {
@@ -12,8 +9,10 @@ namespace VPIRC
         const string tag = "IRCBot";
         public static DateTime LastAttemptThrottle = TDateTime.UnixEpoch;
 
-        public event Action<IRCBot> Disposing;
+        public event Action Connected;
+        public event Action Disposing;
 
+        public readonly User      User;
         public readonly IrcClient Client = new IrcClient();
 
         string lastError;
@@ -54,12 +53,16 @@ namespace VPIRC
             get { return lastConnect; }
         }
 
-        public IRCBot(string name)
+        public IRCBot(User user)
         {
-            this.name = VPIRC.IRC.Prefix + name;
+            if (user.Side != Side.VirtualParadise)
+                throw new InvalidOperationException("Tried to create IRC bot for an IRC user (wrong side)");
+
+            this.User = user;
+            this.name = VPIRC.IRC.Prefix + user.Name;
 
             registerEvents();
-            Log.Fine(tag, "Created IRC client for user '{0}'", Name);
+            Log.Fine(tag, "Created IRC client for VP user '{0}'", user);
         }
 
         protected void registerEvents()
@@ -110,6 +113,9 @@ namespace VPIRC
                 Log.Debug(tag, "Connected client '{0}'", Name);
                 lastConnect = DateTime.Now;
                 state       = ConnState.Connected;
+
+                if (Connected != null)
+                    Connected();
             });
         }
 
@@ -131,13 +137,14 @@ namespace VPIRC
         public void Dispose()
         {
             if (Disposing != null)
-                Disposing(this);
+                Disposing();
 
             Client.OnDisconnected -= onDisconnect;
             Client.OnError        -= onError;
             Client.RfcQuit();
             Client.Disconnect();
 
+            Connected = null;
             Disposing = null;
         }
     }

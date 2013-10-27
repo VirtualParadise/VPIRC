@@ -12,6 +12,7 @@ namespace VPIRC
         public static readonly SettingsManager Settings = new SettingsManager();
         public static readonly VPManager       VP       = new VPManager();
         public static readonly IRCManager      IRC      = new IRCManager();
+        public static readonly BridgeManager   Bridge   = new BridgeManager();
 
         static bool exiting;
 
@@ -36,10 +37,7 @@ namespace VPIRC
             Settings.Setup(args);
             VP.Setup();
             IRC.Setup();
-
-            IRC.Add("TestUserA");
-            IRC.Add("TestUserB");
-            IRC.Add("TestUserC");
+            Bridge.Setup();
         }
 
         static void loop()
@@ -53,6 +51,7 @@ namespace VPIRC
 
         static void takedown()
         {
+            Bridge.Takedown();
             VP.Takedown();
             IRC.Takedown();
         }

@@ -27,4 +27,10 @@
         VirtualParadise,
         IRC
     }
+
+    public enum Direction
+    {
+        Entering,
+        Leaving
+    }
 }

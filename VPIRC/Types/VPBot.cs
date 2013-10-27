@@ -21,6 +21,9 @@ namespace VPIRC
             get { return (float) rand.NextDouble() * 360; }
         }
 
+        public event Action Connected;
+
+        public readonly User     User;
         public readonly Instance Bot = new Instance();
 
         protected string name;
@@ -59,17 +62,21 @@ namespace VPIRC
             get { return lastConnect; }
         }
 
-        public VPBot(string name)
+        public VPBot(User user)
         {
-            this.name = VPIRC.VP.Prefix + name;
+            if (user.Side != Side.IRC)
+                throw new InvalidOperationException("Tried to create IRC bot for an IRC user (wrong side)");
 
-            registerDisconnect();
-            Log.Fine(tag, "Created bot instance for user '{0}'", Name);
+            this.User = user;
+            this.name = VPIRC.VP.Prefix + user.Name;
+
+            registerEvents();
+            Log.Fine(tag, "Created bot instance for IRC user '{0}'", user);
         }
 
         protected VPBot() { }
 
-        protected void registerDisconnect()
+        protected void registerEvents()
         {
             Bot.UniverseDisconnect += onDisconnect;
             Bot.WorldDisconnect    += onDisconnect;
@@ -108,6 +115,9 @@ namespace VPIRC
                 Log.Debug(tag, "Connected bot '{0}'", Name);
                 lastConnect = DateTime.Now;
                 state       = ConnState.Connected;
+
+                if (Connected != null)
+                    Connected();
             });
         }
 
@@ -119,6 +129,8 @@ namespace VPIRC
 
         public void Dispose()
         {
+            Connected = null;
+
             Bot.Dispose();
         }
 

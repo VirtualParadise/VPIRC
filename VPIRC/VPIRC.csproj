@@ -78,6 +78,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Managers\BridgeManager.cs" />
     <Compile Include="Managers\IRCManager.cs" />
     <Compile Include="Managers\SettingsManager.cs" />
     <Compile Include="Managers\VPManager.cs" />

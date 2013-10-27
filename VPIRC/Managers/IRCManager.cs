@@ -1,9 +1,7 @@
-﻿using System;
+﻿using Meebey.SmartIrc4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Meebey.SmartIrc4net;
 
 namespace VPIRC
 {
@@ -30,6 +28,7 @@ namespace VPIRC
             PerConnectThrottle = int.Parse( VPIRC.Settings.IRC["PerConnectThrottle"] ?? "1" );
 
             root = new IRCBotRoot();
+            root.Client.OnNames         += onNames;
             root.Client.OnJoin          += onEnter;
             root.Client.OnPart          += onLeave;
             root.Client.OnQuit          += onQuit;
@@ -39,8 +38,9 @@ namespace VPIRC
             root.Connect();
         }
 
-        void onDisposing(IRCBot obj)
+        void onDisposing()
         {
+            root.Client.OnNames         -= onNames;
             root.Client.OnJoin          -= onEnter;
             root.Client.OnPart          -= onLeave;
             root.Client.OnQuit          -= onQuit;
@@ -55,26 +55,28 @@ namespace VPIRC
 
             bots.Clear();
             root.Dispose();
+            Enter = null;
+            Leave = null;
             Log.Info(tag, "All bots cleared");
         }
 
-        public IRCBot Add(string name)
+        public void Add(User user)
         {
-            var bot = new IRCBot(name);
+            if ( GetBot(user) != null )
+                return;
 
-            Log.Info(tag, "Bridging user '{0}'", name);
-            bots.Add(bot);
-            return bot;
+            Log.Info(tag, "Bridging user '{0}'", user);
+            bots.Add( new IRCBot(user) );
         }
 
-        public void Remove(string name)
+        public void Remove(User user)
         {
-            var bot = bots.FirstOrDefault( b => b.Name.IEquals(name) );
+            var bot = GetBot(user);
 
             if (bot == null)
                 return;
 
-            Log.Info(tag, "No longer bridging user '{0}'", name);
+            Log.Info(tag, "No longer bridging user '{0}'", user);
             bot.Dispose();
             bots.Remove(bot);
         }
@@ -132,6 +134,11 @@ namespace VPIRC
             return users.Where( u => u.Name.IEquals(name) ).FirstOrDefault();
         }
 
+        public IRCBot GetBot(User user)
+        {
+            return bots.Where( b => b.User.Equals(user) ).FirstOrDefault();
+        }
+
         void onDisconnect(object sender, EventArgs e)
         {
             Log.Warn(tag, "Bridge client disconnected; clearing all users");
@@ -145,8 +152,21 @@ namespace VPIRC
 
         void onEnter(object sender, JoinEventArgs e)
         {
-            var nick = e.Who;
-            if ( nick.StartsWith(Prefix) )
+            enter(e.Who);
+        }
+
+        void onNames(object sender, NamesEventArgs e)
+        {
+            foreach (var name in e.UserList)
+                enter(name);
+        }
+
+        void enter(string nick)
+        {
+            if ( string.IsNullOrWhiteSpace(nick) )
+                return;
+
+            if ( nick.StartsWith(Prefix) || nick.IEquals(root.Name) )
                 return;
 
             var user = new User(nick, Side.IRC);

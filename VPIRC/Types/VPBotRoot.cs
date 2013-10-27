@@ -10,8 +10,20 @@ namespace VPIRC
         {
             name = VPIRC.Settings.VP["BridgeNick"] ?? "VP-IRC";
 
-            registerDisconnect();
+            registerRootEvents();
+            registerEvents();
+
             Log.Fine(tag, "Created root bridge bot instance");
+        }
+
+        void registerRootEvents()
+        {
+            this.Connected += onConnected;
+        }
+
+        void onConnected()
+        {
+            Bot.ConsoleBroadcast("", "*** {0} is bridging this world with channel {1}@{2}...", name, VPIRC.IRC.Channel, VPIRC.Settings.IRC["Hostname"]);
         }
 
     }
