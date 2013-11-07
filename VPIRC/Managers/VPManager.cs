@@ -6,14 +6,16 @@ using VP;
 namespace VPIRC
 {
     public delegate void MessageArgs(User source, string message);
+    public delegate void ConsoleMessageArgs(ConsoleMessage message);
 
     class VPManager
     {
         const string tag = "Virtual Paradise";
 
-        public event UserArgs    Enter;
-        public event UserArgs    Leave;
-        public event MessageArgs Message;
+        public event UserArgs           Enter;
+        public event UserArgs           Leave;
+        public event MessageArgs        Message;
+        public event ConsoleMessageArgs Console;
 
         public string Prefix;
         public string World;
@@ -187,7 +189,8 @@ namespace VPIRC
 
         void onConsole(Instance sender, ConsoleMessage console)
         {
-            message(console.Name, console.Message);
+            if (Console != null)
+                Console(console);
         }
 
         void message(string name, string message)

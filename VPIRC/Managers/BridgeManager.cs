@@ -13,6 +13,7 @@ namespace VPIRC
             VPIRC.VP.Enter   += u => { onEnterLeave(u, Direction.Entering); };
             VPIRC.VP.Leave   += u => { onEnterLeave(u, Direction.Leaving); };
             VPIRC.VP.Message += onVPMessage;
+            VPIRC.VP.Console += onVPConsole;
 
             VPIRC.IRC.Enter   += u => { onEnterLeave(u, Direction.Entering); };
             VPIRC.IRC.Leave   += u => { onEnterLeave(u, Direction.Leaving); };
@@ -38,6 +39,23 @@ namespace VPIRC
                 sendType = SendType.Message;
 
             bot.Client.SendMessage(sendType, VPIRC.IRC.Channel, message);
+        }
+
+        void onVPConsole(ConsoleMessage message)
+        {
+            if ( string.IsNullOrWhiteSpace(message.Name) || message.Name.IEquals(VPIRC.VP.Root.Name) )
+                return;
+
+            var outMsg = "{0}: {1}".LFormat(message.Name, message.Message);
+            var bot    = VPIRC.IRC.Root;
+            var prefix = (message.Effect & ChatEffect.Bold) == ChatEffect.Bold
+                ? "\u0002"
+                : "";
+
+            if (bot == null || bot.State != ConnState.Connected)
+                return;
+
+            bot.Client.SendMessage(SendType.Message, VPIRC.IRC.Channel, outMsg);
         }
         
         void onIRCMessage(User source, string message, bool action)
