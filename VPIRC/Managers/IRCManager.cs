@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace VPIRC
 {
@@ -230,12 +231,15 @@ namespace VPIRC
         void message(string name, string message, bool action)
         {
             var user = GetUser(name);
+            // Needed due to bug with SmartIrc4Net not obeying encoding
+            var bytes = Encoding.Default.GetBytes(message);
+            var msg   = Encoding.UTF8.GetString(bytes);
 
             if (user == null)
                 return;
 
             if (Message != null)
-                Message(user, message, action);
+                Message(user, msg, action);
         }
         
         void onNickChange(object sender, NickChangeEventArgs e)

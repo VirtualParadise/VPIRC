@@ -1,6 +1,7 @@
 ﻿using Meebey.SmartIrc4net;
 using System;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace VPIRC
 {
@@ -61,6 +62,7 @@ namespace VPIRC
             this.User = user;
             this.name = VPIRC.IRC.Prefix + user.Name.Replace(" ","");
             Client.ActiveChannelSyncing = true;
+            Client.Encoding             = Encoding.UTF8;
 
             registerEvents();
             Log.Fine(tag, "Created IRC client for VP user '{0}'", user);
