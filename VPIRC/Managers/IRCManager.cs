@@ -228,18 +228,18 @@ namespace VPIRC
             message(e.Data.Nick, e.ActionMessage, true);
         }
 
-        void message(string name, string message, bool action)
+        void message(string name, string incoming, bool action)
         {
             var user = GetUser(name);
             // Needed due to bug with SmartIrc4Net not obeying encoding
-            var bytes = Encoding.Default.GetBytes(message);
-            var msg   = Encoding.UTF8.GetString(bytes);
+            var bytes    = Encoding.Default.GetBytes(incoming);
+            var fixedMsg = Encoding.UTF8.GetString(bytes);
 
             if (user == null)
                 return;
 
             if (Message != null)
-                Message(user, msg, action);
+                Message(user, fixedMsg, action);
         }
         
         void onNickChange(object sender, NickChangeEventArgs e)

@@ -1,7 +1,7 @@
 ﻿using Meebey.SmartIrc4net;
 using System;
-using System.Threading.Tasks;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace VPIRC
 {
@@ -155,7 +155,7 @@ namespace VPIRC
             Client.OnDisconnected -= onDisconnect;
             Client.OnError        -= onError;
             Client.OnKick         -= onKick;
-            Client.RfcQuit();
+            Client.RfcQuit("User has left world");
             Client.Disconnect();
 
             Connected = null;

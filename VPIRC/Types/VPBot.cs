@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using VP;
-using Nexus;
 
 namespace VPIRC
 {
@@ -65,7 +64,7 @@ namespace VPIRC
         public VPBot(User user)
         {
             if (user.Side != Side.IRC)
-                throw new InvalidOperationException("Tried to create IRC bot for an IRC user (wrong side)");
+                throw new InvalidOperationException("Tried to create VP bot for an VP user (wrong side)");
 
             this.User = user;
             this.name = VPIRC.VP.Prefix + user.Name;
