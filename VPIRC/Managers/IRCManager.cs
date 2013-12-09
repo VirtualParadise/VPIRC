@@ -3,17 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace VPIRC
 {
-    public delegate void IrcMessageArgs(User source, string message, bool action);
+    public delegate void IrcMessageArgs(IRCUser source, string message, bool action);
 
     class IRCManager
     {
         const string tag = "IRC";
 
-        public event UserArgs       Enter;
-        public event UserArgs       Leave;
+        public event IRCUserArgs    Enter;
+        public event IRCUserArgs    Leave;
         public event IrcMessageArgs Message;
 
         public string Prefix;
@@ -26,8 +27,8 @@ namespace VPIRC
             get { return root; }
         }
 
-        List<IRCBot> bots  = new List<IRCBot>();
-        List<User>   users = new List<User>();
+        List<IRCBot>  bots  = new List<IRCBot>();
+        List<IRCUser> users = new List<IRCUser>();
 
         public void Setup()
         {
@@ -76,7 +77,7 @@ namespace VPIRC
             Log.Info(tag, "All bots cleared");
         }
 
-        public void Add(User user)
+        public void Add(VPUser user)
         {
             if ( GetBot(user) != null )
                 return;
@@ -85,7 +86,7 @@ namespace VPIRC
             bots.Add( new IRCBot(user) );
         }
 
-        public void Remove(User user)
+        public void Remove(VPUser user)
         {
             var bot = GetBot(user);
 
@@ -122,6 +123,8 @@ namespace VPIRC
 
             foreach (var bot in bots)
             {
+                Thread.Sleep(10);
+
                 switch (bot.State)
                 {
                     case ConnState.Connecting:
@@ -145,12 +148,12 @@ namespace VPIRC
             }
         }
 
-        public User GetUser(string name)
+        public IRCUser GetUser(string name)
         {
             return users.Where( u => u.Name.IEquals(name) ).FirstOrDefault();
         }
 
-        public IRCBot GetBot(User user)
+        public IRCBot GetBot(VPUser user)
         {
             return bots.Where( b => b.User.Equals(user) ).FirstOrDefault();
         }
@@ -168,16 +171,16 @@ namespace VPIRC
 
         void onEnter(object sender, JoinEventArgs e)
         {
-            enter(e.Data.Nick);
+            onEnter(e.Data.Nick);
         }
 
         void onNames(object sender, NamesEventArgs e)
         {
             foreach (var name in e.UserList)
-               enter( name.TrimStart('~', '+', '@', '&', '%') );
+               onEnter( name.TrimStart('~', '+', '@', '&', '%') );
         }
 
-        void enter(string nick)
+        void onEnter(string nick)
         {
             if ( string.IsNullOrWhiteSpace(nick) )
                 return;
@@ -185,7 +188,7 @@ namespace VPIRC
             if ( nick.StartsWith(Prefix) || nick.IEquals(root.Name) )
                 return;
 
-            var user = new User(nick, Side.IRC);
+            var user = new IRCUser(nick);
             users.Add(user);
 
             if (Enter != null)
@@ -245,7 +248,7 @@ namespace VPIRC
         void onNickChange(object sender, NickChangeEventArgs e)
         {
             leave(e.OldNickname);
-            enter(e.NewNickname);
+            onEnter(e.NewNickname);
         }
     }
 }

@@ -15,14 +15,14 @@ namespace VPIRC
             VPIRC.VP.Message += onVPMessage;
             VPIRC.VP.Console += onVPConsole;
 
-            VPIRC.IRC.Enter   += u => { onEnterLeave(u, Direction.Entering); };
-            VPIRC.IRC.Leave   += u => { onEnterLeave(u, Direction.Leaving); };
-            VPIRC.IRC.Message += onIRCMessage;
+            VPIRC.IRC.Enter       += u => { onEnterLeave(u, Direction.Entering); };
+            VPIRC.IRC.Leave       += u => { onEnterLeave(u, Direction.Leaving); };
+            VPIRC.IRC.Message     += onIRCMessage;
         }
 
         public void Takedown() { }
 
-        void onVPMessage(User source, string message)
+        void onVPMessage(VPUser source, string message)
         {
             SendType sendType;
             var bot = VPIRC.IRC.GetBot(source);
@@ -58,7 +58,7 @@ namespace VPIRC
             bot.Client.SendMessage(SendType.Message, VPIRC.IRC.Channel, outMsg);
         }
         
-        void onIRCMessage(User source, string message, bool action)
+        void onIRCMessage(IRCUser source, string message, bool action)
         {
             var bot    = VPIRC.VP.GetBot(source);
             var prefix = action ? "/me " : "";
@@ -80,20 +80,26 @@ namespace VPIRC
 
         void onEnterLeave(User user, Direction dir)
         {
-            if (user.Side == Side.IRC)
+            if (user is IRCUser)
             {
                 if (dir == Direction.Entering)
-                    VPIRC.VP.Add(user);
+                    VPIRC.VP.Add(user as IRCUser);
                 else
-                    VPIRC.VP.Remove(user);
+                    VPIRC.VP.Remove(user as IRCUser);
             }
             else
             {
                 if (dir == Direction.Entering)
-                    VPIRC.IRC.Add(user);
+                    VPIRC.IRC.Add(user as VPUser);
                 else
-                    VPIRC.IRC.Remove(user);
+                    VPIRC.IRC.Remove(user as VPUser);
             }
         }
+    }
+
+    public enum Direction
+    {
+        Entering,
+        Leaving
     }
 }

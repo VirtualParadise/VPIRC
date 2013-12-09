@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using VP;
 
 namespace VPIRC
 {
-    public delegate void MessageArgs(User source, string message);
+    public delegate void VPMessageArgs(VPUser source, string message);
     public delegate void ConsoleMessageArgs(ConsoleMessage message);
 
     class VPManager
     {
         const string tag = "Virtual Paradise";
 
-        public event UserArgs           Enter;
-        public event UserArgs           Leave;
-        public event MessageArgs        Message;
+        public event VPUserArgs         Enter;
+        public event VPUserArgs         Leave;
+        public event VPMessageArgs      Message;
         public event ConsoleMessageArgs Console;
 
         public string Prefix;
@@ -26,8 +27,8 @@ namespace VPIRC
             get { return root; }
         }
 
-        List<VPBot> bots  = new List<VPBot>();
-        List<User>  users = new List<User>();
+        List<VPBot>  bots  = new List<VPBot>();
+        List<VPUser> users = new List<VPUser>();
 
         public void Setup()
         {
@@ -58,7 +59,7 @@ namespace VPIRC
             Log.Info(tag, "All bots cleared");
         }
 
-        public void Add(User user)
+        public void Add(IRCUser user)
         {
             if ( GetBot(user) != null )
                 return;
@@ -67,7 +68,7 @@ namespace VPIRC
             bots.Add( new VPBot(user) );
         }
 
-        public void Remove(User user)
+        public void Remove(IRCUser user)
         {
             var bot = GetBot(user);
 
@@ -101,6 +102,8 @@ namespace VPIRC
 
             foreach (var bot in bots)
             {
+                Thread.Sleep(10);
+
                 switch (bot.State)
                 {
                     case ConnState.Connecting:
@@ -121,12 +124,12 @@ namespace VPIRC
             }
         }
 
-        public User GetUser(string name)
+        public VPUser GetUser(string name)
         {
             return users.Where( u => u.Name.IEquals(name) ).FirstOrDefault();
         }
 
-        public VPBot GetBot(User user)
+        public VPBot GetBot(IRCUser user)
         {
             return bots.Where( b => b.User.Equals(user) ).FirstOrDefault();
         }
@@ -147,16 +150,11 @@ namespace VPIRC
             if ( avatar.Name.StartsWith("[" + Prefix) || avatar.Name.IEquals(root.Name) )
                 return;
 
-            var user = GetUser(avatar.Name);
+            var user = GetUser(avatar.Name) ?? new VPUser(avatar.Name);
+            user.Sessions.Add(avatar.Session);
 
-            if (user != null)
-            {
-                user.Instances++;
-                return;
-            }
-
-            user = new User(avatar.Name, Side.VirtualParadise);
-            users.Add(user);
+            if ( !users.Contains(user) )
+                users.Add(user);
 
             if (Enter != null)
                 Enter(user);
@@ -172,8 +170,8 @@ namespace VPIRC
             if (user == null)
                 return;
             
-            user.Instances--;
-            if (user.Instances > 0)
+            user.Sessions.Remove(session);
+            if (user.Sessions.Count > 0)
                 return;
 
             if (Leave != null)

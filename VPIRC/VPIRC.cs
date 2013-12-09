@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 
 namespace VPIRC
 {
@@ -44,7 +43,6 @@ namespace VPIRC
             {
                 VP.Update();
                 IRC.Update();
-                Thread.Sleep(50);
             }
         }
 

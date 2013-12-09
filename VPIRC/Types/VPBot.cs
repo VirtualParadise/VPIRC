@@ -22,7 +22,7 @@ namespace VPIRC
 
         public event Action Connected;
 
-        public readonly User     User;
+        public readonly IRCUser  User;
         public readonly Instance Bot = new Instance();
 
         protected string name;
@@ -61,11 +61,8 @@ namespace VPIRC
             get { return lastConnect; }
         }
 
-        public VPBot(User user)
+        public VPBot(IRCUser user)
         {
-            if (user.Side != Side.IRC)
-                throw new InvalidOperationException("Tried to create VP bot for an VP user (wrong side)");
-
             this.User = user;
             this.name = VPIRC.VP.Prefix + user.Name;
 

@@ -13,7 +13,7 @@ namespace VPIRC
         public event Action Connected;
         public event Action Disposing;
 
-        public readonly User      User;
+        public readonly VPUser    User;
         public readonly IrcClient Client = new IrcClient();
 
         string lastError;
@@ -54,11 +54,8 @@ namespace VPIRC
             get { return lastConnect; }
         }
 
-        public IRCBot(User user)
+        public IRCBot(VPUser user)
         {
-            if (user.Side != Side.VirtualParadise)
-                throw new InvalidOperationException("Tried to create IRC bot for an IRC user (wrong side)");
-
             this.User = user;
             this.name = VPIRC.IRC.Prefix + user.Name.Replace(" ","");
             Client.ActiveChannelSyncing = true;

@@ -85,9 +85,11 @@
     <Compile Include="Managers\SettingsManager.cs" />
     <Compile Include="Managers\VPManager.cs" />
     <Compile Include="Types\ConnState.cs" />
+    <Compile Include="Types\User.cs" />
+    <Compile Include="Types\IRCUser.cs" />
     <Compile Include="Types\IRCBotRoot.cs" />
     <Compile Include="Types\IRCBot.cs" />
-    <Compile Include="Types\User.cs" />
+    <Compile Include="Types\VPUser.cs" />
     <Compile Include="Types\VPBot.cs" />
     <Compile Include="Types\VPBotRoot.cs" />
     <Compile Include="Utility\Constants.cs" />
