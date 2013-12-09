@@ -34,6 +34,14 @@ namespace VPIRC
             get { return name; }
         }
 
+        /// <summary>
+        /// Gets the VP-style name of this bot
+        /// </summary>
+        public string VPName
+        {
+            get { return "[{0}]".LFormat(Name); }
+        }
+
         ConnState state = ConnState.Disconnected;
         /// <summary>
         /// Gets the connection state of this bot

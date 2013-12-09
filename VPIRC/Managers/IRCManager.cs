@@ -7,15 +7,17 @@ using System.Threading;
 
 namespace VPIRC
 {
-    public delegate void IrcMessageArgs(IRCUser source, string message, bool action);
+    public delegate void IRCMessageArgs(IRCUser source, string message, bool action);
+    public delegate void IRCPrivMessageArgs(IRCUser source, VPUser target, string message, bool action);
 
     class IRCManager
     {
         const string tag = "IRC";
 
-        public event IRCUserArgs    Enter;
-        public event IRCUserArgs    Leave;
-        public event IrcMessageArgs Message;
+        public event IRCUserArgs        Enter;
+        public event IRCUserArgs        Leave;
+        public event IRCMessageArgs     Message;
+        public event IRCPrivMessageArgs PrivMessage;
 
         public string Prefix;
         public string Channel;
@@ -82,8 +84,10 @@ namespace VPIRC
             if ( GetBot(user) != null )
                 return;
 
+            var bot = new IRCBot(user);
             Log.Info(tag, "Bridging user '{0}'", user);
-            bots.Add( new IRCBot(user) );
+            bots.Add(bot);
+            bot.Query += onPrivateMessage;
         }
 
         public void Remove(VPUser user)
@@ -94,6 +98,7 @@ namespace VPIRC
                 return;
 
             Log.Info(tag, "No longer bridging user '{0}'", user);
+            bot.Query -= onPrivateMessage;
             bot.Dispose();
             bots.Remove(bot);
         }
@@ -197,15 +202,15 @@ namespace VPIRC
 
         void onLeave(object sender, PartEventArgs e)
         {
-            leave(e.Who);
+            onLeave(e.Who);
         }
 
         void onQuit(object sender, QuitEventArgs e)
         {
-            leave(e.Who);
+            onLeave(e.Who);
         }
 
-        void leave(string nick)
+        void onLeave(string nick)
         {
             if ( nick.StartsWith(Prefix) )
                 return;
@@ -221,22 +226,27 @@ namespace VPIRC
             users.Remove(user);
         }
 
+        void onNickChange(object sender, NickChangeEventArgs e)
+        {
+            onLeave(e.OldNickname);
+            onEnter(e.NewNickname);
+        }
+
         void onMessage(object sender, IrcEventArgs e)
         {
-            message(e.Data.Nick, e.Data.Message, false);
+            onMessage(e.Data.Nick, e.Data.Message, false);
         }
 
         void onAction(object sender, ActionEventArgs e)
         {
-            message(e.Data.Nick, e.ActionMessage, true);
+            onMessage(e.Data.Nick, e.ActionMessage, true);
         }
 
-        void message(string name, string incoming, bool action)
+        void onMessage(string name, string incoming, bool action)
         {
             var user = GetUser(name);
             // Needed due to bug with SmartIrc4Net not obeying encoding
-            var bytes    = Encoding.Default.GetBytes(incoming);
-            var fixedMsg = Encoding.UTF8.GetString(bytes);
+            var fixedMsg = Unicode.FixFromDefault(incoming);
 
             if (user == null)
                 return;
@@ -244,11 +254,26 @@ namespace VPIRC
             if (Message != null)
                 Message(user, fixedMsg, action);
         }
-        
-        void onNickChange(object sender, NickChangeEventArgs e)
+
+        void onPrivateMessage(IRCBot recipient, IrcEventArgs e, bool action)
         {
-            leave(e.OldNickname);
-            onEnter(e.NewNickname);
+            string fixedMsg;
+            var    source = GetUser(e.Data.Nick);
+            var    target = recipient.User;
+
+            if (source == null)
+                return;
+
+            if (action)
+            {
+                var actionEvent = e as ActionEventArgs;
+                fixedMsg = Unicode.FixFromDefault(actionEvent.ActionMessage);
+            }
+            else
+                fixedMsg = Unicode.FixFromDefault(e.Data.Message);
+
+            if (PrivMessage != null)
+                PrivMessage(source, target, fixedMsg, action);
         }
     }
 }

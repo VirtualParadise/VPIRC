@@ -93,6 +93,7 @@
     <Compile Include="Types\VPBot.cs" />
     <Compile Include="Types\VPBotRoot.cs" />
     <Compile Include="Utility\Constants.cs" />
+    <Compile Include="Utility\Unicode.cs" />
     <Compile Include="VPIRC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -5,13 +5,17 @@ using System.Threading.Tasks;
 
 namespace VPIRC
 {
-    class IRCBot : IDisposable
+    public delegate void IRCQueryArgs(IRCBot recipient, IrcEventArgs e, bool action);
+
+    public class IRCBot : IDisposable
     {
         const string tag = "IRCBot";
+
         public static DateTime LastAttemptThrottle = TDateTime.UnixEpoch;
 
-        public event Action Connected;
-        public event Action Disposing;
+        public event Action       Connected;
+        public event Action       Disposing;
+        public event IRCQueryArgs Query;
 
         public readonly VPUser    User;
         public readonly IrcClient Client = new IrcClient();
@@ -70,6 +74,8 @@ namespace VPIRC
             Client.OnKick         += onKick;
             Client.OnError        += onError;
             Client.OnDisconnected += onDisconnect;
+            Client.OnQueryMessage += onQuery;
+            Client.OnQueryAction  += onQueryAction;
         }
 
         protected IRCBot() { }
@@ -144,6 +150,18 @@ namespace VPIRC
             Client.Disconnect();
         }
 
+        void onQuery(object sender, IrcEventArgs e)
+        {
+            if (Query != null)
+                Query(this, e, false);
+        }
+
+        void onQueryAction(object sender, ActionEventArgs e)
+        {
+            if (Query != null)
+                Query(this, e, true);
+        }
+
         public void Dispose()
         {
             if (Disposing != null)
@@ -152,11 +170,14 @@ namespace VPIRC
             Client.OnDisconnected -= onDisconnect;
             Client.OnError        -= onError;
             Client.OnKick         -= onKick;
+            Client.OnQueryMessage -= onQuery;
+            Client.OnQueryAction  -= onQueryAction;
             Client.RfcQuit("User has left world");
             Client.Disconnect();
 
             Connected = null;
             Disposing = null;
+            Query     = null;
         }
 
         public override string ToString()

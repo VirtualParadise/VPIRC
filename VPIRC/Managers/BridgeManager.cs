@@ -18,7 +18,8 @@ namespace VPIRC
             VPIRC.IRC.Enter       += u => { onEnterLeave(u, Direction.Entering); };
             VPIRC.IRC.Leave       += u => { onEnterLeave(u, Direction.Leaving); };
             VPIRC.IRC.Message     += onIRCMessage;
-        }
+            VPIRC.IRC.PrivMessage += onIRCPrivateMessage;
+        } 
 
         public void Takedown() { }
 
@@ -76,6 +77,25 @@ namespace VPIRC
 
                 bot.Bot.Say("{0}{1}", prefix, chunk);
             }
+        }
+
+        void onIRCPrivateMessage(IRCUser source, VPUser target, string message, bool action)
+        {
+            var prefix    = action ? "/me " : "";
+            var sourceBot = VPIRC.VP.GetBot(source).VPName;
+            var bot       = VPIRC.VP.Root.Bot;
+
+            foreach (var session in target.Sessions)
+                if (message.Length <= 250)
+                    bot.ConsoleMessage(session, ChatEffect.Italic, Colors.Private, sourceBot, "{0}{1}", prefix, message);
+                else while (message.Length > 0)
+                {
+                    var len   = Math.Min(message.Length, 250);
+                    var chunk = message.Substring(0, len);
+                    message   = message.Substring(len);
+
+                    bot.ConsoleMessage(session, ChatEffect.Italic, Colors.Private, sourceBot, "{0}{1}", prefix, message);
+                }
         }
 
         void onEnterLeave(User user, Direction dir)
