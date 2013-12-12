@@ -67,16 +67,9 @@ namespace VPIRC
             if (bot == null || bot.State != ConnState.Connected)
                 return;
 
-            if (message.Length <= 250)
-                bot.Bot.Say("{0}{1}", prefix, message);
-            else while (message.Length > 0)
-            {
-                var len   = Math.Min(message.Length, 250);
-                var chunk = message.Substring(0, len);
-                message   = message.Substring(len);
-
+            var chunks = Unicode.ChunkByByteLimit(message, 255);
+            foreach (var chunk in chunks)
                 bot.Bot.Say("{0}{1}", prefix, chunk);
-            }
         }
 
         void onIRCPrivateMessage(IRCUser source, VPUser target, string message, bool action)
@@ -86,16 +79,11 @@ namespace VPIRC
             var bot       = VPIRC.VP.Root.Bot;
 
             foreach (var session in target.Sessions)
-                if (message.Length <= 250)
-                    bot.ConsoleMessage(session, ChatEffect.Italic, Colors.Private, sourceBot, "{0}{1}", prefix, message);
-                else while (message.Length > 0)
-                {
-                    var len   = Math.Min(message.Length, 250);
-                    var chunk = message.Substring(0, len);
-                    message   = message.Substring(len);
-
-                    bot.ConsoleMessage(session, ChatEffect.Italic, Colors.Private, sourceBot, "{0}{1}", prefix, message);
-                }
+            {
+                var chunks = Unicode.ChunkByByteLimit(message, 255);
+                foreach (var chunk in chunks)
+                    bot.ConsoleMessage(session, ChatEffect.Italic, Colors.Private, sourceBot, "{0}{1}", prefix, chunk);
+            }
         }
 
         void onEnterLeave(User user, Direction dir)
