@@ -20,8 +20,6 @@ namespace VPIRC
         public readonly VPUser    User;
         public readonly IrcClient Client = new IrcClient();
 
-        string lastError;
-
         protected string name;
         /// <summary>
         /// Gets the name of this bot
@@ -73,9 +71,28 @@ namespace VPIRC
         {
             Client.OnKick         += onKick;
             Client.OnError        += onError;
+            Client.OnErrorMessage += onError;
             Client.OnDisconnected += onDisconnect;
             Client.OnQueryMessage += onQuery;
             Client.OnQueryAction  += onQueryAction;
+        }
+
+        public void Dispose()
+        {
+            if (Disposing != null)
+                Disposing();
+
+            Client.OnDisconnected -= onDisconnect;
+            Client.OnError        -= onError;
+            Client.OnKick         -= onKick;
+            Client.OnQueryMessage -= onQuery;
+            Client.OnQueryAction  -= onQueryAction;
+            Client.RfcQuit("User has left world");
+            Client.Disconnect();
+
+            Connected = null;
+            Disposing = null;
+            Query     = null;
         }
 
         protected IRCBot() { }
@@ -135,10 +152,9 @@ namespace VPIRC
             state = ConnState.Disconnected;
         }
 
-        void onError(object sender, ErrorEventArgs e)
+        void onError(object sender, IrcEventArgs e)
         {
-            lastError = e.ErrorMessage;
-            Log.Warn(tag, "IRC error: {0}", e.ErrorMessage);
+            Log.Warn(tag, "IRC error: {0}", e.Data.Message);
         }
         
         void onKick(object sender, KickEventArgs e)
@@ -160,24 +176,6 @@ namespace VPIRC
         {
             if (Query != null)
                 Query(this, e, true);
-        }
-
-        public void Dispose()
-        {
-            if (Disposing != null)
-                Disposing();
-
-            Client.OnDisconnected -= onDisconnect;
-            Client.OnError        -= onError;
-            Client.OnKick         -= onKick;
-            Client.OnQueryMessage -= onQuery;
-            Client.OnQueryAction  -= onQueryAction;
-            Client.RfcQuit("User has left world");
-            Client.Disconnect();
-
-            Connected = null;
-            Disposing = null;
-            Query     = null;
         }
 
         public override string ToString()
