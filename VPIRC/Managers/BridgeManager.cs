@@ -17,6 +17,7 @@ namespace VPIRC
 
             VPIRC.IRC.Enter       += u => { onEnterLeave(u, Direction.Entering); };
             VPIRC.IRC.Leave       += u => { onEnterLeave(u, Direction.Leaving); };
+            VPIRC.IRC.Kick        += onIRCKick;
             VPIRC.IRC.Message     += onIRCMessage;
             VPIRC.IRC.PrivMessage += onIRCPrivateMessage;
         } 
@@ -78,6 +79,12 @@ namespace VPIRC
 
             foreach (var session in target.Sessions)
                 bot.ConsoleMessage(session, ChatEffect.Italic, Colors.Private, sourceBot, "{0}{1}", prefix, message);
+        }
+
+        void onIRCKick(User whom, string who, string reason)
+        {
+            VPIRC.VP.Root.Broadcast("*** {0} was kicked from channel {1} by {2} ({3})", whom, VPIRC.IRC.Channel, who, reason);
+            VPIRC.VP.Remove(whom as IRCUser);
         }
 
         void onEnterLeave(User user, Direction dir)

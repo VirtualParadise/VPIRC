@@ -9,6 +9,7 @@ namespace VPIRC
 {
     public delegate void IRCMessageArgs(IRCUser source, string message, bool action);
     public delegate void IRCPrivMessageArgs(IRCUser source, VPUser target, string message, bool action);
+    public delegate void IRCKickArgs(IRCUser who, string whom, string reason);
 
     class IRCManager
     {
@@ -16,6 +17,7 @@ namespace VPIRC
 
         public event IRCUserArgs        Enter;
         public event IRCUserArgs        Leave;
+        public event IRCKickArgs        Kick;
         public event IRCMessageArgs     Message;
         public event IRCPrivMessageArgs PrivMessage;
 
@@ -44,6 +46,7 @@ namespace VPIRC
             root.Client.OnJoin           += onEnter;
             root.Client.OnPart           += onLeave;
             root.Client.OnQuit           += onQuit;
+            root.Client.OnKick           += onKick;
             root.Client.OnDisconnected   += onDisconnect;
             root.Client.OnChannelMessage += onMessage;
             root.Client.OnChannelAction  += onAction;
@@ -59,6 +62,7 @@ namespace VPIRC
             root.Client.OnJoin           -= onEnter;
             root.Client.OnPart           -= onLeave;
             root.Client.OnQuit           -= onQuit;
+            root.Client.OnKick           -= onKick;
             root.Client.OnDisconnected   -= onDisconnect;
             root.Client.OnChannelMessage -= onMessage;
             root.Client.OnChannelAction  -= onAction;
@@ -208,6 +212,22 @@ namespace VPIRC
         void onQuit(object sender, QuitEventArgs e)
         {
             onLeave(e.Who);
+        }
+
+        void onKick(object sender, KickEventArgs e)
+        {
+            var who  = e.Who;
+            var whom = e.Whom;
+
+            if ( whom.StartsWith(Prefix) )
+                return;
+
+            var user = GetUser(whom);
+
+            if (Kick != null)
+                Kick(user, who, e.KickReason);
+
+            users.Remove(user);
         }
 
         void onLeave(string nick)

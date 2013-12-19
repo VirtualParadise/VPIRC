@@ -18,6 +18,11 @@ namespace VPIRC
             Log.Fine(tag, "Created root bridge bot instance");
         }
 
+        public void Broadcast(string message, params object[] parts)
+        {
+            Bot.ConsoleBroadcast(ChatEffect.None, Colors.Info, "", message, parts);
+        }
+
         void registerRootEvents()
         {
             this.Connected += onConnected;
@@ -25,8 +30,7 @@ namespace VPIRC
 
         void onConnected()
         {
-            Bot.ConsoleBroadcast(ChatEffect.None, Colors.Info, "", "*** {0} is bridging this world with channel {1}@{2}...", name, VPIRC.IRC.Channel, VPIRC.Settings.IRC["Hostname"]);
+            Broadcast("*** {0} is bridging this world with channel {1}@{2}...", name, VPIRC.IRC.Channel, VPIRC.Settings.IRC["Hostname"]);
         }
-
     }
 }
