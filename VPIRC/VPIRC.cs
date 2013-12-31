@@ -19,8 +19,10 @@ namespace VPIRC
 
             setup(args);
 
-            if (exiting) goto exit;
-            else         loop();
+            if (exiting)
+                goto exit;
+            else
+                loop();
 
         exit:
             takedown();
