@@ -87,8 +87,12 @@ namespace VPIRC
             Client.OnKick         -= onKick;
             Client.OnQueryMessage -= onQuery;
             Client.OnQueryAction  -= onQueryAction;
-            Client.RfcQuit("User has left world");
-            Client.Disconnect();
+
+            if (Client.IsConnected)
+            {
+                Client.RfcQuit("User has left world");
+                Client.Disconnect();
+            }
 
             Connected = null;
             Disposing = null;
