@@ -11,6 +11,6 @@ namespace VPIRC
 
     static class Regexes
     {
-        public static readonly Regex IRCNicknameChars = new Regex(@"[^0-9a-zA-Z_-\\\[\]\{\}`|]");
+        public static readonly Regex IRCNicknameChars = new Regex(@"[^-0-9a-zA-Z_\\\[\]\{\}`|]");
     }
 }
