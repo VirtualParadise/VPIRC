@@ -1,5 +1,4 @@
 Build/*.exe*
-packages/
 */obj/*
 *.suo
 Build/*.xml

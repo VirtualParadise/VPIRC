@@ -1,0 +1,1468 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>libVPNET</name>
+    </assembly>
+    <members>
+        <member name="T:VP.TerrainContainer">
+            <summary>
+            Container for SDK methods, events and properties related to terrain, such as
+            querying and terraforming
+            </summary>
+        </member>
+        <member name="M:VP.TerrainContainer.SetNode(VP.TerrainNode,System.Int32,System.Int32)">
+            <summary>
+            Sets a terrain node's worth of data to the world's terrain. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.TerrainContainer.QueryTile(System.Int32,System.Int32,System.Int32[0:,0:])">
+            <summary>
+            Queries a tile, using a 2 dimensional array of node revisions for versioning.
+            Thread-safe.
+            </summary>
+            <remarks>
+            Only nodes that have a revision higher than the one provided for it will be
+            sent via the <see cref="E:VP.TerrainContainer.GetNode"/> event
+            </remarks>
+        </member>
+        <member name="M:VP.TerrainContainer.QueryTile(System.Int32,System.Int32)">
+            <summary>
+            Queries a tile for all its nodes. Thread-safe.
+            </summary>
+        </member>
+        <member name="E:VP.TerrainContainer.GetNode">
+            <summary>
+            Fired for each node received after a call to
+            <see cref="M:VP.TerrainContainer.QueryTile(System.Int32,System.Int32)"/>, providing the node's data and the parent
+            tile's coordinates
+            </summary>
+        </member>
+        <member name="E:VP.TerrainContainer.CallbackNodeSet">
+            <summary>
+            Fired after a call to the asynchronous <see cref="M:VP.TerrainContainer.SetNode(VP.TerrainNode,System.Int32,System.Int32)"/>, providing a
+            result code and, if successful, the set <see cref="T:VP.TerrainNode"/>
+            </summary>
+        </member>
+        <member name="T:VP.TerrainContainer.GetNodeArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, a
+            <see cref="T:VP.TerrainNode"/> definition and the X and Z of the tile it belongs
+            to for the <see cref="E:VP.TerrainContainer.GetNode"/> event
+            </summary>
+        </member>
+        <member name="T:VP.TerrainContainer.NodeSetCallbackArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, a
+            reason code and a <see cref="T:VP.TerrainNode"/> reference for
+            <see cref="E:VP.TerrainContainer.CallbackNodeSet"/>
+            </summary>
+        </member>
+        <member name="T:VP.Instance">
+            <summary>
+            Represents a Virtual Paradise bot that can interact with a universe and world,
+            complete with all applicable methods and events provided by the SDK.
+            
+            Also contains helper methods and properties, such as the current
+            <see cref="P:VP.Instance.Position"/> of the instance.
+            </summary>
+        </member>
+        <member name="M:VP.Instance.Pump(System.Int32)">
+            <summary>
+            Pumps incoming events from and outgoing calls to the server, for the maximum
+            amount of given milliseconds. This is nessecary in order to fire most events
+            and for most function calls to go through. Chainable and thread-safe.
+            </summary>
+            <remarks>Equivalent of C SDK's vp_wait()</remarks>
+        </member>
+        <member name="M:VP.Instance.Login(VP.Uniserver,System.String,System.String,System.String)">
+            <summary>
+            Logs into a specified universe with the given authentication details and bot
+            name. Chainable and thread-safe.
+            </summary>
+            <remarks>Servers always add square brackets around a bot's name</remarks>
+        </member>
+        <member name="M:VP.Instance.Login(System.String,System.String,System.String)">
+            <summary>
+            Logs into the default Virtual Paradise universe with the given authentication
+            details and bot name. Chainable and thread-safe.
+            </summary>
+            <remarks>Servers always add square brackets around a bot's name</remarks>
+        </member>
+        <member name="M:VP.Instance.Enter(System.String,System.Boolean)">
+            <summary>
+            Enters a given world, Chainable and thread-safe.
+            </summary>
+            <param name="worldname">Target world to enter</param>
+            <param name="setState">
+            If true (default), the bot will automatically call
+            <see cref="M:VP.Instance.GoTo(System.Single,System.Single,System.Single,System.Single,System.Single)"/> to set state upon entry.
+            Set to false for shadow operations that do not require a presence.
+            </param>
+        </member>
+        <member name="M:VP.Instance.GoTo(System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Updates the bot's own position and rotation. If called for the first time
+            after entering the world, this makes this instance's presence known to other
+            avatars. Chainable and thread-safe.
+            </summary>
+            <remarks>
+            This needs to be called at least once in order to receive certain events in
+            the world
+            </remarks>
+        </member>
+        <member name="M:VP.Instance.GoTo(VP.AvatarPosition)">
+            <summary>
+            Updates the bot's own position and rotation using a given
+            <see cref="T:VP.AvatarPosition"/>. Chainable and thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.Instance.Leave">
+            <summary>
+            Leaves the current world. Chainable and thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.Instance.Say(System.String,System.Object[])">
+            <summary>
+            Sends a formatted chat message to current world. Chainable, thread-safe and
+            splits messages over 255 bytes in length automatically.
+            </summary>
+            <seealso cref="M:System.String.Format(System.String,System.Object)"/>
+        </member>
+        <member name="M:VP.Instance.ConsoleMessage(System.Int32,VP.ChatEffect,Nexus.Graphics.Colors.ColorRgb,System.String,System.String,System.Object[])">
+            <summary>
+            Sends a formattable and broadcast-like message with custom styling to a
+            specific session. Chainable, thread-safe and splits messages over 255 bytes
+            in length automatically.
+            </summary>
+            <param name="session">
+            Target session, or use 0 to broadcast to everybody. Alternatively, use 
+            <see cref="!:ConsoleBroadcast(ChatEffect, Color, string, string)"/>
+            </param>
+            <param name="name">
+            Name to use for message, or blank string for a standalone message
+            </param>
+            <param name="effects">Effects to use on this message</param>
+            <param name="color">Color to use on this message</param>
+            <param name="message">Message to send</param>
+        </member>
+        <member name="M:VP.Instance.ConsoleBroadcast(VP.ChatEffect,Nexus.Graphics.Colors.ColorRgb,System.String,System.String,System.Object[])">
+            <summary>
+            Sends a formattable and broadcast-like message with custom styling to
+            everybody in-world. Chainable, thread-safe and splits messages over 255 bytes
+            in length automatically.
+            </summary>
+            <param name="name">
+            Name to use for message, or blank string for a standalone message
+            </param>
+            <param name="effects">Effects to use on this message</param>
+            <param name="color">Color to use on this message</param>
+            <param name="message">Message to send</param>
+        </member>
+        <member name="M:VP.Instance.ConsoleMessage(System.Int32,System.String,System.String,System.Object[])">
+            <summary>
+            Sends a formattable and broadcast-like message with default styling to a
+            specific session. Chainable, thread-safe and splits messages over 255 bytes
+            in length automatically.
+            </summary>
+            <param name="session">
+            Target session, or use 0 to broadcast to everybody. Alternatively, use 
+            <see cref="!:ConsoleBroadcast(string, string)"/>
+            </param>
+            <param name="name">
+            Name to use for message, or blank string for a standalone message
+            </param>
+            <param name="message">Message to send</param>
+        </member>
+        <member name="M:VP.Instance.ConsoleBroadcast(System.String,System.String,System.Object[])">
+            <summary>
+            Sends a formattable broadcast-like message with default styling to everybody
+            in-world. Chainable, thread-safe and splits messages over 255 bytes in length
+            automatically.
+            </summary>
+            <param name="name">
+            Name to use for message, or blank string for a standalone message
+            </param>
+            <param name="message">Message to send</param>
+        </member>
+        <member name="F:VP.Instance.Data">
+            <summary>
+            Methods, events and properties related to user or world list data
+            </summary>
+        </member>
+        <member name="F:VP.Instance.Avatars">
+            <summary>
+            Methods, events and properties related to users and avatars
+            </summary>
+        </member>
+        <member name="F:VP.Instance.Property">
+            <summary>
+            Methods, events and properties related to property and object handling,
+            including queries
+            </summary>
+        </member>
+        <member name="F:VP.Instance.Terrain">
+            <summary>
+            Methods, events and properties related to terrain modificaton and queries
+            </summary>
+        </member>
+        <member name="M:VP.Instance.#ctor">
+            <summary>
+            Creates a bot instance, initializing the SDK automatically
+            </summary>
+        </member>
+        <member name="M:VP.Instance.Finalize">
+            <summary>
+            Automatically disposes this instance on finalize
+            </summary>
+        </member>
+        <member name="M:VP.Instance.Dispose">
+            <summary>
+            Disposes of the bot by destorying it natively, then disposes of all
+            containers.
+            </summary>
+        </member>
+        <member name="P:VP.Instance.Position">
+            <summary>
+            Gets this instance's current position in-world, including coordinates and
+            rotation
+            </summary>
+        </member>
+        <member name="E:VP.Instance.UniverseDisconnect">
+            <summary>
+            Fired when the SDK has been unexpectedly disconnected from the universe,
+            providing an error code
+            </summary>
+            <remarks>
+            Universe connections are independant of world connections. This will not
+            cause <see cref="E:VP.Instance.WorldDisconnect"/> to fire also.
+            </remarks>
+        </member>
+        <member name="E:VP.Instance.WorldDisconnect">
+            <summary>
+            Fired when the SDK has been unexpectedly disconnected from the world,
+            providing an error code
+            </summary>
+        </member>
+        <member name="E:VP.Instance.Chat">
+            <summary>
+            Fired when a chat message has been said in the world, providing the message
+            and source
+            </summary>
+        </member>
+        <member name="E:VP.Instance.Console">
+            <summary>
+            Fired when a console message has been sent to this instance, providing the
+            message, its formatting and source
+            </summary>
+        </member>
+        <member name="P:VP.Instance.Name">
+            <summary>
+            Logged in bot name, or blank if not logged in at least once
+            </summary>
+        </member>
+        <member name="P:VP.Instance.World">
+            <summary>
+            World currently logged into, or blank if not logged into a world
+            </summary>
+        </member>
+        <member name="T:VP.Instance.Event">
+            <summary>
+            Encapsulates a general method that accepts an <see cref="T:VP.Instance"/> for most
+            events
+            </summary>
+        </member>
+        <member name="T:VP.Instance.Callback">
+            <summary>
+            Encapsulates a general method that accepts an <see cref="T:VP.Instance"/> and a
+            <see cref="T:VP.ReasonCode"/> for most callbacks
+            </summary>
+        </member>
+        <member name="T:VP.Instance.ChatEvent">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and a
+            <see cref="T:VP.ChatMessage"/> for the <see cref="E:VP.Instance.Chat"/> event
+            </summary>
+        </member>
+        <member name="T:VP.Instance.ConsoleEvent">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and a
+            <see cref="T:VP.ConsoleMessage"/> for the <see cref="E:VP.Instance.Console"/> event
+            </summary>
+        </member>
+        <member name="T:VP.Instance.DisconnectEvent">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and an
+            integer error code representing an error code from the operating system
+            </summary>
+        </member>
+        <member name="T:VP.AvatarsContainer">
+            <summary>
+            Container for SDK methods, events and properties related to avatars, such as
+            state changes, clicks and teleport requests
+            </summary>
+        </member>
+        <member name="M:VP.AvatarsContainer.Click(System.Int32,Nexus.Vector3D)">
+            <summary>
+            Sends a click event to an avatar by session number on the specified
+            coordinates using a <see cref="T:Nexus.Vector3D"/>. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.AvatarsContainer.Click(System.Int32)">
+            <summary>
+            Sends a click event to an avatar by session number. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.AvatarsContainer.Teleport(System.Int32,System.String,Nexus.Vector3D,System.Single,System.Single)">
+            <summary>
+            Sends a request for a target session to teleport to a specified world and
+            position. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.AvatarsContainer.Teleport(System.Int32,System.String,VP.AvatarPosition)">
+            <summary>
+            Sends a request for a target session to teleport to a specified world and
+            <see cref="T:VP.AvatarPosition"/>. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.AvatarsContainer.Teleport(System.Int32,Nexus.Vector3D,System.Single,System.Single)">
+            <summary>
+            Sends a request for a target session to teleport to a specified position in
+            the same world. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.AvatarsContainer.Teleport(System.Int32,VP.AvatarPosition)">
+            <summary>
+            Sends a request for a target session to teleport to a specified
+            <see cref="T:VP.AvatarPosition"/> in the same world. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.AvatarsContainer.SendUrl(System.Int32,System.String,VP.UrlTarget)">
+            <summary>
+            Sends a request for a target session to open a URL in a specified target
+            container. Thread-safe.
+            </summary>
+            <param name="session">Target session ID of the request</param>
+            <param name="url">URL for the target to open, or "" to clear</param>
+            <param name="target">Target container to open the URL in</param>
+        </member>
+        <member name="M:VP.AvatarsContainer.ClearUrl(System.Int32)">
+            <summary>
+            Sends a request for a target session to close any pages open on their 3D
+            viewport (overlay). Thread-safe.
+            </summary>
+            <param name="session">Target session ID of the request</param>
+        </member>
+        <member name="E:VP.AvatarsContainer.Enter">
+            <summary>
+            Fired when an avatar enters the world, providing its initial state
+            </summary>
+            <remarks>
+            Technically, this is when the avatar calls vp_state_change() (or on this SDK,
+            <see cref="M:VP.Instance.GoTo(System.Single,System.Single,System.Single,System.Single,System.Single)"/>) for the first
+            time. It is possible for bots to enter a world without having this event
+            fired for them.
+            </remarks>
+        </member>
+        <member name="E:VP.AvatarsContainer.Change">
+            <summary>
+            Fired when an avatar's state (e.g. position) is changed, providing all of the
+            avatar's latest state
+            </summary>
+        </member>
+        <member name="E:VP.AvatarsContainer.Leave">
+            <summary>
+            Fired when an avatar exits the world, providing only its name and session ID
+            </summary>
+        </member>
+        <member name="E:VP.AvatarsContainer.Clicked">
+            <summary>
+            Fired when this instance is clicked by another avatar in-world, providing
+            click coordinates and source ID
+            </summary>
+        </member>
+        <member name="E:VP.AvatarsContainer.Teleported">
+            <summary>
+            Fired when an avatar sends this instance a request to teleport to the
+            given position and, optionally, world. Also provides the source session ID.
+            </summary>
+        </member>
+        <member name="E:VP.AvatarsContainer.UrlRequest">
+            <summary>
+            Fired when an avatar sends this instance a request to open a URL in the
+            given target container. Also provides the source session ID.
+            </summary>
+        </member>
+        <member name="T:VP.AvatarsContainer.StateArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and an
+            <see cref="T:VP.Avatar"/> state for the <see cref="E:VP.AvatarsContainer.Enter"/> and
+            <see cref="E:VP.AvatarsContainer.Change"/> events
+            </summary>
+        </member>
+        <member name="T:VP.AvatarsContainer.LeaveArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, a name
+            and a unique session ID for the <see cref="E:VP.AvatarsContainer.Leave"/> event
+            </summary>
+        </member>
+        <member name="T:VP.AvatarsContainer.ClickedArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and an
+            <see cref="T:VP.AvatarClick"/> for the <see cref="E:VP.AvatarsContainer.Clicked"/> event
+            </summary>
+        </member>
+        <member name="T:VP.AvatarsContainer.TeleportedArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, a source
+            unique session ID, an <see cref="T:VP.AvatarPosition"/> and optional world string
+            for the <see cref="E:VP.AvatarsContainer.Teleported"/> event
+            </summary>
+        </member>
+        <member name="T:VP.AvatarsContainer.UrlRequestArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, a source
+            unique session ID, a URL and a <see cref="T:VP.UrlTarget"/> for the
+            <see cref="E:VP.AvatarsContainer.UrlRequest"/> event
+            </summary>
+        </member>
+        <member name="T:VP.DataContainer">
+            <summary>
+            Container for SDK methods, events and properties related to data collection, such
+            as world and user metadata
+            </summary>
+        </member>
+        <member name="M:VP.DataContainer.GetUserAttributes(System.String)">
+            <summary>
+            Requests user attributes by name. Currently not implemented natively.
+            </summary>
+        </member>
+        <member name="M:VP.DataContainer.GetUserAttributes(System.Int32)">
+            <summary>
+            Requests user attributes by account unique ID number. Thread-safe.
+            </summary>
+            <seealso cref="E:VP.DataContainer.UserAttributes"/>
+        </member>
+        <member name="M:VP.DataContainer.ListWorlds">
+            <summary>
+            Requests the latest list of worlds and their states from the universe.
+            Thread-safe.
+            </summary>
+            <seealso cref="E:VP.DataContainer.WorldEntry"/>
+        </member>
+        <member name="E:VP.DataContainer.WorldSetting">
+            <summary>
+            Fired automatically for each world setting after a successful
+            <see cref="M:VP.Instance.Enter(System.String,System.Boolean)"/> call
+            </summary>
+        </member>
+        <member name="E:VP.DataContainer.WorldSettingsDone">
+            <summary>
+            Fired automatically when the server has sent all world settings after a
+            successful <see cref="M:VP.Instance.Enter(System.String,System.Boolean)"/> call
+            </summary>
+        </member>
+        <member name="E:VP.DataContainer.WorldEntry">
+            <summary>
+            Fired automatically for any world that updates its state or for the
+            destination world after a successful <see cref="M:VP.Instance.Enter(System.String,System.Boolean)"/> call.
+            Also called for each world from a <see cref="M:VP.DataContainer.ListWorlds"/> call.
+            </summary>
+        </member>
+        <member name="E:VP.DataContainer.UserAttributes">
+            <summary>
+            Fired when the attributes of an existing user is requested from
+            <see cref="M:VP.DataContainer.GetUserAttributes(System.String)"/> or <see cref="M:VP.DataContainer.GetUserAttributes(System.Int32)"/>
+            </summary>
+        </member>
+        <member name="T:VP.DataContainer.WorldListArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and a
+            <see cref="T:VP.World"/> state entry for the <see cref="E:VP.DataContainer.WorldEntry"/> event
+            </summary>
+        </member>
+        <member name="T:VP.DataContainer.WorldSettingArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and a
+            string key and value representing a world setting for the
+            <see cref="E:VP.DataContainer.WorldSetting"/> event
+            </summary>
+        </member>
+        <member name="T:VP.DataContainer.UserAttributesArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and a
+            <see cref="T:VP.User"/> attributes entry for the <see cref="E:VP.DataContainer.UserAttributes"/>
+            event
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer">
+            <summary>
+            Container for SDK methods, events and properties related to property management,
+            including queries and global object events
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.OnObjectCreate(System.IntPtr)">
+            <summary>
+            Note: The native VP SDK uses the ObjectCreate event for query cell results
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.QueryCell(System.Int32,System.Int32)">
+            <summary>
+            Queries a cell for all 3D objects contained within. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.GetObject(System.Int32)">
+            <summary>
+            Gets the attributes of a single object by its ID. Asyncrhonous and
+            thread-safe. Responds using <see cref="E:VP.PropertyContainer.CallbackObjectGet"/>
+            </summary>
+            <param name="id">ID of the object to query</param>
+        </member>
+        <member name="M:VP.PropertyContainer.AddObject(VP.VPObject)">
+            <summary>
+            Adds a raw <see cref="T:VP.VPObject"/> to the world. Asynchronous and thread-safe.
+            </summary>
+            <param name="obj">Instance of VPObject with model and position pre-set</param>
+        </member>
+        <member name="M:VP.PropertyContainer.CreateObject(System.String,Nexus.Vector3D,Nexus.Quaternion)">
+            <summary>
+            Creates and adds a new <see cref="T:VP.VPObject"/> with a specified model name,
+            position and rotation. Asynchronous and thread-safe.
+            </summary>
+            <param name="model">Model name</param>
+            <param name="position"><see cref="T:Nexus.Vector3D"/> position</param>
+            <param name="rotation"><see cref="T:Nexus.Quaternion"/> rotation</param>
+        </member>
+        <member name="M:VP.PropertyContainer.CreateObject(System.String,Nexus.Vector3D)">
+            <summary>
+            Creates and adds a new <see cref="T:VP.VPObject"/> with a specified model name,
+            position and default rotation. Asynchronous and thread-safe.
+            </summary>
+            <param name="model">Model name</param>
+            <param name="position"><see cref="T:Nexus.Vector3D"/> position</param>
+        </member>
+        <member name="M:VP.PropertyContainer.ChangeObject(VP.VPObject)">
+            <summary>
+            Changes an object in-world using a <see cref="T:VP.VPObject"/> with newer state
+            and the target unique ID. Asynchronous and thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.DeleteObject(System.Int32)">
+            <summary>
+            Attempts to delete an object by unique ID. Asynchronous and thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.DeleteObject(VP.VPObject)">
+            <summary>
+            Attempts to delete an object in-world using the unique ID of a given
+            <see cref="T:VP.VPObject"/>.  Asynchronous and thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.ClickObject(System.Int32,Nexus.Vector3D)">
+            <summary>
+            Sends a click event on a given in-world object by unique ID, on the specified
+            coordinates using a <see cref="T:Nexus.Vector3D"/>. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.ClickObject(System.Int32)">
+            <summary>
+            Sends a click event on a given in-world object by unique ID. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.ClickObject(VP.VPObject,Nexus.Vector3D)">
+            <summary>
+            Sends a click event on a given in-world object on the specified coordinates
+            using a <see cref="T:Nexus.Vector3D"/>. Thread-safe.
+            </summary>
+        </member>
+        <member name="M:VP.PropertyContainer.ClickObject(VP.VPObject)">
+            <summary>
+            Sends a click event on a given in-world object. Thread-safe.
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.QueryCellResult">
+            <summary>
+            Fired for each object found in a cell after a call to
+            <see cref="M:VP.PropertyContainer.QueryCell(System.Int32,System.Int32)"/>, providing the object's data
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.QueryCellEnd">
+            <summary>
+            Fired when a <see cref="M:VP.PropertyContainer.QueryCell(System.Int32,System.Int32)"/> call is complete after all objects found
+            in the cell have been sent
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.ObjectCreate">
+            <summary>
+            Fired when an object is created anywhere in world, providing the object data
+            and source session ID
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.ObjectChange">
+            <summary>
+            Fired when an object is changed anywhere in world, providing the object data
+            and source session ID
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.ObjectDelete">
+            <summary>
+            Fired when an object is deleted anywhere in world, providing the object's ID
+            and source session ID
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.ObjectClick">
+            <summary>
+            Fired when an object is clicked anywhere in the world, providing click
+            coordinates and source ID
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.CallbackObjectCreate">
+            <summary>
+            Fired after a call to the asynchronous <see cref="M:VP.PropertyContainer.AddObject(VP.VPObject)"/>, providing a
+            result code and, if successful, the created 3D object
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.CallbackObjectChange">
+            <summary>
+            Fired after a call to the asynchronous <see cref="M:VP.PropertyContainer.ChangeObject(VP.VPObject)"/>, providing a
+            result code and, if successful, the affected 3D object
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.CallbackObjectDelete">
+            <summary>
+            Fired after a call to the asynchronous <see cref="M:VP.PropertyContainer.DeleteObject(System.Int32)"/>,
+            providing a result code and, if successful, the deleted object's server-
+            provided unique ID
+            </summary>
+        </member>
+        <member name="E:VP.PropertyContainer.CallbackObjectGet">
+            <summary>
+            Fired after a call to the asynchronous <see cref="M:VP.PropertyContainer.GetObject(System.Int32)"/>,
+            providing a result code and, if successful, a <see cref="T:VP.VPObject"/> of the
+            object's details
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer.QueryCellResultArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and an
+            in-world object's data for the <see cref="E:VP.PropertyContainer.QueryCellResult"/> event
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer.QueryCellEndArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and 2D
+            coordinates for the <see cref="E:VP.PropertyContainer.QueryCellEnd"/> event
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer.ObjectCreateOrChangeArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, session
+            ID and an in-world object's data for the <see cref="E:VP.PropertyContainer.ObjectCreate"/> or
+            <see cref="E:VP.PropertyContainer.ObjectChange"/> events
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer.ObjectDeleteArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, session
+            ID and an in-world object's ID for the <see cref="E:VP.PropertyContainer.ObjectDelete"/> event
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer.ObjectClickArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/> and an
+            <see cref="T:VP.ObjectClick"/> for the <see cref="E:VP.PropertyContainer.ObjectClick"/> event
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer.ObjectCallbackArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, a
+            reason code and a <see cref="T:VP.VPObject"/> for
+            <see cref="E:VP.PropertyContainer.CallbackObjectCreate"/> and <see cref="E:VP.PropertyContainer.CallbackObjectChange"/>
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer.ObjectDeleteCallbackArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, a
+            reason code and a unique ID for <see cref="E:VP.PropertyContainer.CallbackObjectDelete"/>
+            </summary>
+        </member>
+        <member name="T:VP.PropertyContainer.ObjectGetCallbackArgs">
+            <summary>
+            Encapsulates a method that accepts a source <see cref="T:VP.Instance"/>, a
+            reason code and a <see cref="T:VP.VPObject"/> for <see cref="E:VP.PropertyContainer.CallbackObjectGet"/>
+            </summary>
+        </member>
+        <member name="M:VP.Native.DataHandlers.NodeDataTo2DArray(System.Byte[])">
+            <summary>
+            Converts terrain node data to a 2D TerrainCell array
+            </summary>
+        </member>
+        <member name="M:VP.Native.DataHandlers.NodeToNodeData(VP.TerrainNode)">
+            <summary>
+            Converts a 2D TerrainCell array to raw VP terrain data
+            </summary>
+            <remarks>http://stackoverflow.com/a/650886</remarks>
+        </member>
+        <member name="M:VP.Native.DLLHandler.Unpack">
+            <summary>
+            Unpacks the native VP SDK dll from the assembly upon first use for the
+            correct platform
+            http://weblogs.asp.net/ralfw/archive/2007/02/04/single-assembly-deployment-of-managed-and-unmanaged-code.aspx
+            </summary>
+        </member>
+        <member name="M:VP.SDK.CreateInstance">
+            <summary>
+            Makes the native SDK create an instance in memory and returns the pointer.
+            Initializes the SDK if not already initialized. Thread-safe.
+            </summary>
+        </member>
+        <member name="T:VP.Avatar">
+            <summary>
+            Represents an immutable record of an avatar's in-world state, including position
+            data
+            </summary>
+        </member>
+        <member name="F:VP.Avatar.Name">
+            <summary>
+            Gets the name of this avatar
+            </summary>
+        </member>
+        <member name="F:VP.Avatar.Id">
+            <summary>
+            Gets the ID of the user this avatar belongs to
+            </summary>
+        </member>
+        <member name="F:VP.Avatar.Session">
+            <summary>
+            Gets the unique session ID of this avatar
+            </summary>
+        </member>
+        <member name="F:VP.Avatar.Type">
+            <summary>
+            Gets the currently set type of this avatar
+            </summary>
+        </member>
+        <member name="F:VP.Avatar.Position">
+            <summary>
+            Gets the last known position of this avatar
+            </summary>
+        </member>
+        <member name="M:VP.Avatar.#ctor(System.IntPtr)">
+            <summary>
+            Creates an Avatar from a native instance's attributes
+            </summary>
+        </member>
+        <member name="M:VP.Avatar.ToString">
+            <summary>
+            Formats this Avatar state to a human-readable string
+            </summary>
+        </member>
+        <member name="P:VP.Avatar.IsBot">
+            <summary>
+            Checks if the avatar belongs to a bot instance, i.e. if the name is surrounded
+            in square brackets
+            </summary>
+        </member>
+        <member name="T:VP.ChatEffect">
+            <summary>
+            Bitfield of effects applied to a console message
+            </summary>
+        </member>
+        <member name="F:VP.ChatEffect.None">
+            <summary>
+            No formatting applied
+            </summary>
+        </member>
+        <member name="F:VP.ChatEffect.Bold">
+            <summary>
+            Bold formatting
+            </summary>
+        </member>
+        <member name="F:VP.ChatEffect.Italic">
+            <summary>
+            Italics (emphasis) formatting
+            </summary>
+        </member>
+        <member name="F:VP.ChatEffect.BoldItalic">
+            <summary>
+            Both bold and italics formatting
+            </summary>
+        </member>
+        <member name="T:VP.ChatMessage">
+            <summary>
+            Represents a chat message
+            </summary>
+        </member>
+        <member name="F:VP.ChatMessage.Session">
+            <summary>
+            Gets the unique session ID of the source of this chat message
+            </summary>
+        </member>
+        <member name="F:VP.ChatMessage.Name">
+            <summary>
+            Gets the name of the source of this chat message
+            </summary>
+        </member>
+        <member name="F:VP.ChatMessage.Message">
+            <summary>
+            Gets the actual message itself
+            </summary>
+        </member>
+        <member name="T:VP.ConsoleMessage">
+            <summary>
+            Represents a console message
+            </summary>
+        </member>
+        <member name="F:VP.ConsoleMessage.Session">
+            <summary>
+            Gets the unique session ID of the source of this console message
+            </summary>
+        </member>
+        <member name="F:VP.ConsoleMessage.Name">
+            <summary>
+            Gets the name attached to this console message
+            </summary>
+            <remarks>It is possible for this to be a blank string</remarks>
+        </member>
+        <member name="F:VP.ConsoleMessage.Message">
+            <summary>
+            Gets the actual message itself
+            </summary>
+        </member>
+        <member name="F:VP.ConsoleMessage.Effect">
+            <summary>
+            Gets the effects applied to this console message
+            </summary>
+        </member>
+        <member name="F:VP.ConsoleMessage.Color">
+            <summary>
+            Gets the color of this console message
+            </summary>
+        </member>
+        <member name="T:VP.AvatarPosition">
+            <summary>
+            Represents an immutable value of 3D Cartesian coordinates and rotations of any
+            avatar
+            </summary>
+        </member>
+        <member name="F:VP.AvatarPosition.GroundZero">
+            <summary>
+            Represents an avatar position at a world's ground zero (zero position and
+            rotations)
+            </summary>
+        </member>
+        <member name="F:VP.AvatarPosition.X">
+            <summary>
+            Gets the X (east-west) coordinate of this position
+            </summary>
+        </member>
+        <member name="F:VP.AvatarPosition.Y">
+            <summary>
+            Gets the Y (altitude) coordinate of this position
+            </summary>
+        </member>
+        <member name="F:VP.AvatarPosition.Z">
+            <summary>
+            Gets the Z (south-north) coordinate of this position
+            </summary>
+        </member>
+        <member name="F:VP.AvatarPosition.Pitch">
+            <summary>
+            Gets the pitch (down-up) rotation of this position in degrees
+            </summary>
+        </member>
+        <member name="F:VP.AvatarPosition.Yaw">
+            <summary>
+            Gets the yaw (left-right) rotation of this position in degrees
+            </summary>
+        </member>
+        <member name="M:VP.AvatarPosition.#ctor(Nexus.Vector3D,System.Single,System.Single)">
+            <summary>
+            Creates a new AvatarPosition from a given Vector3D for coordinates and pitch
+            and yaw values for rotation
+            </summary>
+            <param name="pos">Coordinates of position using a Vector3D</param>
+            <param name="pitch">Pitch (down-up) rotation in degrees</param>
+            <param name="yaw">Yaw (left-right) rotation in degrees</param>
+        </member>
+        <member name="M:VP.AvatarPosition.#ctor(System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Creates a new AvatarPosition from a given set of coordinates and pitch and
+            yaw values for rotation
+            </summary>
+            <param name="x">X (east-west) coordinate of position</param>
+            <param name="y">Y (altitude) coordinate of position</param>
+            <param name="z">Z (south-north) coordinate of position</param>
+            <param name="pitch">Pitch (down-up) rotation in degrees</param>
+            <param name="yaw">Yaw (left-right) rotation in degrees</param>
+        </member>
+        <member name="M:VP.AvatarPosition.ToString">
+            <summary>
+            Formats this AvatarPosition to a human-readable string
+            </summary>
+        </member>
+        <member name="P:VP.AvatarPosition.Coordinates">
+            <summary>
+            Gets a Vector3D value for coordinates
+            </summary>
+        </member>
+        <member name="P:VP.AvatarPosition.Rotation">
+            <summary>
+            Gets a Quaternion rotation represented by this position
+            </summary>
+        </member>
+        <member name="T:VP.ObjectClick">
+            <summary>
+            Represents a click on an object in 3D space
+            </summary>
+        </member>
+        <member name="F:VP.ObjectClick.Id">
+            <summary>
+            Gets the unique ID of the object that is the target of this click
+            </summary>
+        </member>
+        <member name="F:VP.ObjectClick.Session">
+            <summary>
+            Gets the unique session ID of the user that is the source of this click
+            </summary>
+        </member>
+        <member name="F:VP.ObjectClick.Position">
+            <summary>
+            Gets the Vector3D representing the coordinates of this click
+            </summary>
+        </member>
+        <member name="T:VP.AvatarClick">
+            <summary>
+            Represents a click on an avatar in 3D space
+            </summary>
+        </member>
+        <member name="F:VP.AvatarClick.SourceSession">
+            <summary>
+            Gets the unique session ID of the user that is the source of this click
+            </summary>
+        </member>
+        <member name="F:VP.AvatarClick.TargetSession">
+            <summary>
+            Gets the unique session ID of the user that is the target of this click
+            </summary>
+        </member>
+        <member name="F:VP.AvatarClick.Position">
+            <summary>
+            Gets the Vector3D representing the coordinates of this click
+            </summary>
+        </member>
+        <member name="T:VP.UrlTarget">
+            <summary>
+            List of target containers that a URL can be opened in
+            </summary>
+        </member>
+        <member name="F:VP.UrlTarget.Browser">
+            <summary>
+            Requests that the URL be opened in an external browser
+            </summary>
+        </member>
+        <member name="F:VP.UrlTarget.Overlay">
+            <summary>
+            Requests that the URL be opened on top of the 3D viewport
+            </summary>
+        </member>
+        <member name="T:VP.TerrainCalculator">
+            <summary>
+            Utility struct for calculating coordinates and relative values of terrain cells,
+            nodes and tiles
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCalculator.GlobalCellX">
+            <summary>
+            Global cell X coordinate
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCalculator.GlobalCellZ">
+            <summary>
+            Global cell Z coordinate
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCalculator.CellX">
+            <summary>
+            Cell X coordinate relative to node
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCalculator.CellZ">
+            <summary>
+            Cell Z coordinate relative to node
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCalculator.NodeX">
+            <summary>
+            Node X relative to tile
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCalculator.NodeZ">
+            <summary>
+            Node Z relative to tile
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCalculator.TileX">
+            <summary>
+            Global tile X relative to world
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCalculator.TileZ">
+            <summary>
+            Global tile Z relative to world
+            </summary>
+        </member>
+        <member name="M:VP.TerrainCalculator.#ctor(System.Single,System.Single,System.Single)">
+            <summary>
+            Creates a fully calculated terrain position from world coordinates
+            </summary>
+        </member>
+        <member name="M:VP.TerrainCalculator.CellToTile(System.Int32)">
+            <summary>
+            Gets tile number from a global cell
+            </summary>
+        </member>
+        <member name="M:VP.TerrainCalculator.CellToLocal(System.Int32)">
+            <summary>
+            Gets a global cell's local coordinate reletive to tile
+            </summary>
+        </member>
+        <member name="M:VP.TerrainCalculator.CellToNode(System.Int32)">
+            <summary>
+            Gets a global cell's local coordinate relative to node
+            </summary>
+        </member>
+        <member name="T:VP.TerrainRotation">
+            <summary>
+            Specifies constants that represent the rotation of a terrain cell's texture
+            </summary>
+        </member>
+        <member name="F:VP.TerrainRotation.North">
+            <summary>
+            Texture rotated north-wise
+            </summary>
+        </member>
+        <member name="F:VP.TerrainRotation.West">
+            <summary>
+            Texture rotated west-wise
+            </summary>
+        </member>
+        <member name="F:VP.TerrainRotation.South">
+            <summary>
+            Texture rotated south-wise
+            </summary>
+        </member>
+        <member name="F:VP.TerrainRotation.East">
+            <summary>
+            Texture rotated east-wise
+            </summary>
+        </member>
+        <member name="T:VP.TerrainCell">
+            <summary>
+            Represents an immutable definition of a terrain cell, typically belonging to a
+            <see cref="T:VP.TerrainNode"/>
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCell.Height">
+            <summary>
+            Gets or sets the height of this cell
+            </summary>
+        </member>
+        <member name="F:VP.TerrainCell.Attributes">
+            <summary>
+            Gets or sets the raw bitfield attributes of this cell
+            </summary>
+        </member>
+        <member name="P:VP.TerrainCell.Hole">
+            <summary>
+            Gets or sets whether this cell is a hole (no drawn or physical geometry)
+            </summary>
+        </member>
+        <member name="P:VP.TerrainCell.Rotation">
+            <summary>
+            Gets or sets the rotation of this cell
+            </summary>
+        </member>
+        <member name="P:VP.TerrainCell.Texture">
+            <summary>Gets or sets the texture used by this cell</summary>
+            <remarks>
+            The VP client uses this value by looking for a texture with the name
+            "terrain#.jpg", where '#' is this value.
+            </remarks>
+        </member>
+        <member name="T:VP.TerrainNode">
+            <summary>
+            Represents a node of terrain, which can hold an 8 by 8 grid of cells
+            </summary>
+        </member>
+        <member name="F:VP.TerrainNode.Cells">
+            <summary>
+            Gets the terrain cell grid of this node
+            </summary>
+        </member>
+        <member name="F:VP.TerrainNode.X">
+            <summary>
+            Gets or sets the X coordinate of this node in relation to its parent tile
+            </summary>
+        </member>
+        <member name="F:VP.TerrainNode.Z">
+            <summary>
+            Gets or sets the Z coordinate of this node in relation to its parent tile
+            </summary>
+        </member>
+        <member name="F:VP.TerrainNode.Revision">
+            <summary>
+            Gets the revision count of this node if it came from a query
+            </summary>
+        </member>
+        <member name="M:VP.TerrainNode.#ctor">
+            <summary>
+            Creates a terrain node
+            </summary>
+        </member>
+        <member name="M:VP.TerrainNode.#ctor(System.IntPtr)">
+            <summary>
+            Creates a terrain node from an instances' attributes and byte array
+            </summary>
+        </member>
+        <member name="P:VP.TerrainNode.Item(System.Int32)">
+            <summary>
+            Gets or sets a TerrainCell value based on one-dimensional index, in X-major
+            order (e.g. TerrainNode[5] = col 5, row 0 or X5 Z0)
+            </summary>
+        </member>
+        <member name="P:VP.TerrainNode.Item(System.Int32,System.Int32)">
+            <summary>
+            Gets or sets a TerrainCell value based on two-dimensional index
+            </summary>
+        </member>
+        <member name="T:VP.Uniserver">
+            <summary>
+            Represents a universe that the SDK connects to
+            </summary>
+        </member>
+        <member name="F:VP.Uniserver.VirtualParadise">
+            <summary>
+            Constant value representing the official Virtual Paradise universe server
+            </summary>
+        </member>
+        <member name="F:VP.Uniserver.CanonicalName">
+            <summary>
+            Gets the canonical name of this universe
+            </summary>
+        </member>
+        <member name="F:VP.Uniserver.Host">
+            <summary>
+            Gets the hostname of this universe
+            </summary>
+        </member>
+        <member name="F:VP.Uniserver.Port">
+            <summary>
+            Gets the port number of this universe
+            </summary>
+        </member>
+        <member name="T:VP.User">
+            <summary>
+            Represents a user and its attributes from the universe
+            </summary>
+        </member>
+        <member name="F:VP.User.ID">
+            <summary>
+            Gets the unique ID number of this user
+            </summary>
+        </member>
+        <member name="F:VP.User.Name">
+            <summary>
+            Gets the canonical login name of this user
+            </summary>
+        </member>
+        <member name="F:VP.User.Email">
+            <summary>
+            Gets the email address of this user
+            </summary>
+            <remarks>
+            This value will be a blank string for users the bot has no permission to
+            access the attributes of
+            </remarks>
+        </member>
+        <member name="F:VP.User.OnlineTime">
+            <summary>
+            Gets the approximate amount of time this user has been online
+            </summary>
+            <remarks>
+            This value will be a zero value for users the bot has no permission to access
+            the attributes of
+            </remarks>
+        </member>
+        <member name="F:VP.User.RegistrationTime">
+            <summary>
+            Gets the date and time this user registered
+            </summary>
+            <remarks>
+            This value will be equivalent to the UNIX epoch (Janurary 1st 1970 00:00) for
+            users the bot has no permission to access the attributes of
+            </remarks>
+        </member>
+        <member name="F:VP.User.LastLogin">
+            <summary>
+            Gets the date and time this user last logged in
+            </summary>
+            <remarks>
+            This value will be equivalent to the UNIX epoch (Janurary 1st 1970 00:00) for
+            users the bot has no permission to access the attributes of
+            </remarks>
+        </member>
+        <member name="T:VP.VPObject">
+            <summary>
+            Represents an object in 3D space
+            </summary>
+        </member>
+        <member name="F:VP.VPObject.Time">
+            <summary>
+            Gets the timestamp of this object's last known modification
+            </summary>
+        </member>
+        <member name="F:VP.VPObject.Owner">
+            <summary>
+            Gets the account number of the owner that owns this object
+            </summary>
+        </member>
+        <member name="F:VP.VPObject.Position">
+            <summary>
+            Gets the in-world Vector3D position of this object
+            </summary>
+        </member>
+        <member name="F:VP.VPObject.Rotation">
+            <summary>
+            Gets the Quaternion (3 axis + angle) rotation of this object
+            </summary>
+        </member>
+        <member name="F:VP.VPObject.Model">
+            <summary>
+            Gets the model file name of this object
+            </summary>
+        </member>
+        <member name="F:VP.VPObject.Action">
+            <summary>
+            Gets the action script which powers client-side interactivity on this object
+            </summary>
+        </member>
+        <member name="F:VP.VPObject.Description">
+            <summary>
+            Gets the description text of this object
+            </summary>
+        </member>
+        <member name="F:VP.VPObject.Type">
+            <summary>Gets the type of this object</summary>
+            <remarks>
+            Currently unused but is made available to allow for complete object backups
+            </remarks>
+            <value>0</value>
+        </member>
+        <member name="F:VP.VPObject.Data">
+            <summary>
+            Gets any arbitary data of this object
+            </summary>
+        </member>
+        <member name="M:VP.VPObject.#ctor(System.String,Nexus.Vector3D)">
+            <summary>
+            Creates a VPObject for adding to the world using a <see cref="T:Nexus.Vector3D"/>
+            for position and default rotation
+            </summary>
+        </member>
+        <member name="M:VP.VPObject.#ctor(System.String,Nexus.Vector3D,Nexus.Quaternion)">
+            <summary>
+            Creates a VPObject for adding to the world using a <see cref="T:Nexus.Vector3D"/>
+            for position and a <see cref="T:Nexus.Quaternion"/> for rotation
+            </summary>
+        </member>
+        <member name="M:VP.VPObject.#ctor(System.IntPtr)">
+            <summary>
+            Creates a VPObject from a native instance's attributes
+            </summary>
+        </member>
+        <member name="P:VP.VPObject.Id">
+            <summary>
+            Gets the ID number of the object in the world. This field is read-only.
+            </summary>
+            <remarks>
+            Automatically set by the server for new objects and is used to reference
+            existing objects for changes or deletions
+            </remarks>
+        </member>
+        <member name="T:VP.WorldState">
+            <summary>
+            Represents the possible states of a world
+            </summary>
+        </member>
+        <member name="F:VP.WorldState.Online">
+            <summary>
+            Online world
+            </summary>
+        </member>
+        <member name="F:VP.WorldState.Stopped">
+            <summary>
+            Offline world
+            </summary>
+        </member>
+        <member name="F:VP.WorldState.Unknown">
+            <summary>
+            No known state
+            </summary>
+        </member>
+        <member name="T:VP.World">
+            <summary>
+            Represents a world's state in a universe
+            </summary>
+        </member>
+        <member name="F:VP.World.Name">
+            <summary>
+            Gets the name of this world
+            </summary>
+        </member>
+        <member name="F:VP.World.UserCount">
+            <summary>
+            Gets the current amount of users in-world
+            </summary>
+        </member>
+        <member name="F:VP.World.State">
+            <summary>
+            Gets the current state of this world
+            </summary>
+        </member>
+        <member name="T:VP.VPException">
+            <summary>
+            Exception that is thrown when an SDK method fails for any reason
+            </summary>
+        </member>
+        <member name="F:VP.VPException.Reason">
+            <summary>
+            Gets the code of this exception. This field is read-only.
+            </summary>
+        </member>
+        <member name="M:VP.Native.Functions.Call(VP.Native.Functions.RCCall)">
+            <summary>
+            Syntatic sugar method for calling native C SDK methods with return codes.
+            This captures the call's return code and throws an exception if nessecary.
+            </summary>
+        </member>
+        <member name="T:VP.ReasonCode">
+            <summary>
+            Specifies possible errors of a function call or callback that the SDK may return
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.Success">
+            <summary>
+            Operation Successfull
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.VersionMismatch">
+            <summary>
+            Incorrect API Version
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.NotInitialized">
+            <summary>
+            Instance not initalized
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.AlreadyInitialized">
+            <summary>
+            Instance already initialized
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.StringTooLong">
+            <summary>
+            String too long
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.InvalidPassword">
+            <summary>
+            Invalid password
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.WorldNotFound">
+            <summary>
+            World not found
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.WorldLoginError">
+            <summary>
+            World login error
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.NotInWorld">
+            <summary>
+            Not in world
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.ConnectionError">
+            <summary>
+            Connection error
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.NoInstance">
+            <summary>
+            No instance
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.NotImplemented">
+            <summary>
+            Not immplemented
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.NoSuchAttribute">
+            <summary>
+            No such attribute available
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.NotAllowed">
+            <summary>
+            Operation not allowed
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.DatabaseError">
+            <summary>
+            Universe database error
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.NoSuchUser">
+            <summary>
+            No such user exists
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.Timeout">
+            <summary>
+            Timeout
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.NotInUniverse">
+            <summary>
+            Currently not in universe
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.InvalidArguments">
+            <summary>
+            Invalid arguments provided
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.ObjectNotFound">
+            <summary>
+            Object of a given ID not found
+            </summary>
+        </member>
+        <member name="F:VP.ReasonCode.UnknownError">
+            <summary>
+            Unknown SDK error
+            </summary>
+        </member>
+        <member name="M:VP.Native.Utf8StringToManaged.CleanUpNativeData(System.IntPtr)">
+            <summary>
+            Do nothing, for some reason CleanUpNativeData is called for pointers
+            that are not even created by the marshaler. This can 
+            cause heap corruption because of double free or because a different
+            allocater may have been used to allocate the memory block.
+            </summary>
+            <param name="pNativeData"></param>
+        </member>
+    </members>
+</doc>
