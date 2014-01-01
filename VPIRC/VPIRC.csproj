@@ -63,9 +63,10 @@
     </Reference>
     <Reference Include="libVPNET, Version=0.3.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\libVPNET.0.3.2-pre\lib\net40\libVPNET.dll</HintPath>
+      <HintPath>..\packages\libVPNET.0.3.5-pre\lib\net40\libVPNET.dll</HintPath>
     </Reference>
-    <Reference Include="Nexus">
+    <Reference Include="Nexus, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nexus.2.1.0\lib\net40\Nexus.dll</HintPath>
     </Reference>
     <Reference Include="SmarIrc4net">
@@ -105,6 +106,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Import Project="..\packages\libVPNET.0.3.5-pre\build\net40\libVPNET.targets" Condition="Exists('..\packages\libVPNET.0.3.5-pre\build\net40\libVPNET.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
