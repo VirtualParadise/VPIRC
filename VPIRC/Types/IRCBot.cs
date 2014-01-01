@@ -59,7 +59,7 @@ namespace VPIRC
         public IRCBot(VPUser user)
         {
             this.User = user;
-            this.name = VPIRC.IRC.Prefix + user.Name.Replace(" ","");
+            this.name = VPIRC.IRC.Prefix + Regexes.IRCNicknameChars.Replace(user.Name, "");
             Client.ActiveChannelSyncing = true;
             Client.Encoding             = Encoding.UTF8;
 
